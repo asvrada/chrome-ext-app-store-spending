@@ -1,4 +1,4 @@
-import {MSG_TEST} from "./common.js";
+import {MessageType} from "./common.js";
 
 function registerListeners() {
     chrome.webRequest.onBeforeRequest.addListener(onBeforeRequest, {
@@ -57,7 +57,7 @@ function onSendHeaders(details) {
 function sendToContentJs() {
     console.log("Sending to content.js", {tabId, dsid, headers});
 
-    chrome.tabs.sendMessage(tabId, {type: MSG_TEST, dsid, headers});
+    chrome.tabs.sendMessage(tabId, {type: MessageType.LOAD_REQUEST, dsid, headers});
 }
 
 // Listen HTTP requests to this Apple website only

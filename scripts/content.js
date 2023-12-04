@@ -2,10 +2,10 @@ let COMMON = null;
 // import module
 async function import_common() {
     const src = chrome.runtime.getURL("scripts/common.js");
-    let { MSG_TEST } = await import(src);
+    let { MessageType } = await import(src);
 
     COMMON = {
-        MSG_TEST
+        MessageType
     };
 }
 
@@ -64,7 +64,7 @@ async function start() {
 
 function addListener() {
     chrome.runtime.onMessage.addListener((response, sender, sendResponse) => {
-        if ((response.hasOwnProperty("type")) && response.type === COMMON.MSG_TEST) {
+        if ((response.hasOwnProperty("type")) && response.type === COMMON.MessageType.LOAD_REQUEST) {
             console.log("Received from background.js", response);
 
             dsid = response["dsid"];

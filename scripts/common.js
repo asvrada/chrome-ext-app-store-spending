@@ -1,3 +1,6 @@
-const MSG_TEST = "found_first_request";
 
-export {MSG_TEST};
+const MessageType = {
+    LOAD_REQUEST: "LOAD_REQUEST"
+};
+
+export { MessageType };
