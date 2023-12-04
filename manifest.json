@@ -19,7 +19,8 @@
                 "scripts/content.js"
             ],
             "matches": [
-                "https://reportaproblem.apple.com/*"
+                "https://reportaproblem.apple.com/*",
+                "file:///Users/zijiewu/CodeProjects/javascript/chrome-exts/chrome-ext-app-store-spending/*"
             ]
         }
     ],
@@ -28,7 +29,8 @@
         "type": "module"
     },
     "host_permissions": [
-        "https://reportaproblem.apple.com/*"
+        "https://reportaproblem.apple.com/*",
+        "file:///Users/zijiewu/CodeProjects/javascript/chrome-exts/chrome-ext-app-store-spending/*"
     ],
     "permissions": [
         "activeTab",
@@ -39,7 +41,8 @@
     "web_accessible_resources": [
         {
             "matches": [
-                "https://reportaproblem.apple.com/*"
+                "https://reportaproblem.apple.com/*",
+                "file:///*"
             ],
             "resources": [
                 "scripts/common.js"
