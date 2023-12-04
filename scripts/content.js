@@ -1,4 +1,13 @@
-import {MSG_TEST} from "./common.js";
+let COMMON = null;
+// import module
+async function import_common() {
+    const src = chrome.runtime.getURL("scripts/common.js");
+    let { MSG_TEST } = await import(src);
+
+    COMMON = {
+        MSG_TEST
+    };
+}
 
 let dsid = null;
 let headers = {};
@@ -55,7 +64,7 @@ async function start() {
 
 function addListener() {
     chrome.runtime.onMessage.addListener((response, sender, sendResponse) => {
-        if ((response.hasOwnProperty("type")) && response.type === MSG_TEST) {
+        if ((response.hasOwnProperty("type")) && response.type === COMMON.MSG_TEST) {
             console.log("Received from background.js", response);
 
             dsid = response["dsid"];
@@ -72,8 +81,10 @@ function addListener() {
     });
 }
 
-(function main() {
+(async function main() {
     console.log("content.js main called");
+
+    await import_common();
 
     addListener();
 })();

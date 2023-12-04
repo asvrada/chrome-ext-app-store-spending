@@ -35,5 +35,15 @@
         "scripting",
         "cookies",
         "webRequest"
+    ],
+    "web_accessible_resources": [
+        {
+            "matches": [
+                "https://reportaproblem.apple.com/*"
+            ],
+            "resources": [
+                "scripts/common.js"
+            ]
+        }
     ]
 }
