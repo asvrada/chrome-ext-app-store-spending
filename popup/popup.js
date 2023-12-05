@@ -13,7 +13,7 @@ function onBtnStartAnalyze() {
 
             if (currentTab.hasOwnProperty("url")
                 && currentTab.url.includes(URL_REPORT_PROBLEM_APPLE)) {
-
+                // TODO: send message to service work to trigger content script
             } else {
                 // Show error on UI
                 divErrorWrongUrl.style.display = "block";

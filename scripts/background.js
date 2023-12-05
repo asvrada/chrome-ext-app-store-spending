@@ -1,5 +1,3 @@
-import {MessageType} from "./common.js";
-
 function registerListeners() {
     chrome.webRequest.onBeforeRequest.addListener(onBeforeRequest, {
         urls: URLS
@@ -51,13 +49,6 @@ function onSendHeaders(details) {
     console.trace("onSendHeaders", details);
 
     headers = details.requestHeaders;
-}
-
-// Send necessary info to content.js so we can make fetch requests
-function sendToContentJs() {
-    console.log("Sending to content.js", {tabId, dsid, headers});
-
-    chrome.tabs.sendMessage(tabId, {type: MessageType.LOAD_REQUEST, dsid, headers});
 }
 
 // Listen HTTP requests to this Apple website only
