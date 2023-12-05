@@ -11,9 +11,10 @@ function onBtnStartAnalyze() {
         (tabs) => {
             var currentTab = tabs[0]; // there will be only one in this array
 
-            if (currentTab.hasOwnProperty("url")
+            if (currentTab
+                && currentTab.hasOwnProperty("url")
                 && currentTab.url.includes(URL_REPORT_PROBLEM_APPLE)) {
-                // TODO: send message to service work to trigger content script
+                // TODO: send message to service work to start fetching
             } else {
                 // Show error on UI
                 divErrorWrongUrl.style.display = "block";
