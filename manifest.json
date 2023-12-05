@@ -18,12 +18,10 @@
         "type": "module"
     },
     "host_permissions": [
-        "https://reportaproblem.apple.com/*",
-        "file:///Users/zijiewu/CodeProjects/javascript/chrome-exts/chrome-ext-app-store-spending/*"
+        "https://reportaproblem.apple.com/*"
     ],
     "permissions": [
         "activeTab",
-        "scripting",
         "cookies",
         "webRequest"
     ]
