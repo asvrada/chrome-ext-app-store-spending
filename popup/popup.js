@@ -1,10 +1,10 @@
 const ID_BTN_START_ANALYZE = "btnStartAnalyze";
-const ID_BTN_STOP_ANALYZE = "btnStopAnalyze";
+const ID_BTN_ABORT_ANALYZE = "btnStopAnalyze";
 const ID_DIV_WRONG_URL = "errorWrongUrl";
 const URL_REPORT_PROBLEM_APPLE = "reportaproblem.apple.com";
 
 const btnStartAnalyze = document.getElementById(ID_BTN_START_ANALYZE);
-const btnStopAnalyze = document.getElementById(ID_BTN_STOP_ANALYZE);
+const btnAbortAnalyze = document.getElementById(ID_BTN_ABORT_ANALYZE);
 const divErrorWrongUrl = document.getElementById(ID_DIV_WRONG_URL);
 
 let currentTab = null;
@@ -13,8 +13,8 @@ function onBtnStartAnalyze() {
     chrome.runtime.sendMessage({ message: "START", tabId: currentTab.id });
 }
 
-function onBtnStopAnalyze() {
-    chrome.runtime.sendMessage({ message: "STOP", tabId: currentTab.id });
+function onBtnAbortAnalyze() {
+    chrome.runtime.sendMessage({ message: "ABORT", tabId: currentTab.id });
 }
 
 function initUI() {
@@ -45,7 +45,7 @@ function initUI() {
         btnStartAnalyze.addEventListener('click', onBtnStartAnalyze, false);
     }, false)
     document.addEventListener('DOMContentLoaded', function () {
-        btnStopAnalyze.addEventListener('click', onBtnStopAnalyze, false);
+        btnAbortAnalyze.addEventListener('click', onBtnAbortAnalyze, false);
     }, false)
 
     // Init UI

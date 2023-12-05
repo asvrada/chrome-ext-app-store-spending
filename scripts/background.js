@@ -2,6 +2,12 @@
 // Listen HTTP requests to this Apple website only
 const URLS = ["*://reportaproblem.apple.com/api/purchase/search/*"];
 
+const FetchJobState = {
+    NOT_STARTED: 0,
+    RUNNING: 1,
+    ABORTED: 2
+};
+
 // GLOBAL VARIABLES
 let requestHistory = null;
 let mapTabIdFetchJobs = null;
@@ -80,22 +86,20 @@ class FetchJob {
             this.headers[k] = v;
         }
 
-        // 0: stopped
-        // 1: running
-        this.status = 0;
+        this.status = FetchJobState.NOT_STARTED;
     }
 
-    stop() {
-        this.status = 0;
+    abort() {
+        this.status = FetchJobState.ABORTED;
     }
 
     // Fetch everything
     async start() {
-        this.status = 1;
+        this.status = FetchJobState.RUNNING;
 
         let result = await this.doFetch(null);
 
-        while (this.status === 1 && result.nextBatchId !== null) {
+        while (this.status === FetchJobState.RUNNING && result.nextBatchId !== null) {
             // Sleep
             await new Promise(r => setTimeout(r, 400));
 
@@ -139,7 +143,7 @@ class FetchJob {
     }
 }
 
-function registerListeners() {
+function registerHTTPListeners() {
     chrome.webRequest.onBeforeRequest.addListener((details) => {
         requestHistory.recordBeforeRequest(details);
     }, {
@@ -153,6 +157,17 @@ function registerListeners() {
         urls: URLS
     }, ["requestHeaders"]);
 
+}
+
+// Unregister listeners when we start fetching
+function unregisterHTTPListeners() {
+    chrome.webRequest.onBeforeRequest.removeListener();
+    chrome.webRequest.onSendHeaders.removeListener();
+}
+
+function registerListeners() {
+    registerHTTPListeners();
+
     // Listen to messages from popup.js
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log("Got message", request);
@@ -161,19 +176,13 @@ function registerListeners() {
             const tabId = request.tabId;
 
             startFetchJob(tabId);
-        } else if (request.message === "STOP") {
+        } else if (request.message === "ABORT") {
             const tabId = request.tabId;
 
-            stopFetchJob(tabId);
+            abortFetchJob(tabId);
         }
     });
 }
-
-// // Unregister listeners when we start fetching
-// function unregisterListeners() {
-//     chrome.webRequest.onBeforeRequest.removeListener();
-//     chrome.webRequest.onSendHeaders.removeListener();
-// }
 
 function startFetchJob(tabId) {
     if (requestHistory.lastTabId === null
@@ -187,17 +196,20 @@ function startFetchJob(tabId) {
 
     // Create a FetchJob for this tabId
     if (mapTabIdFetchJobs.has(tabId)
-        && mapTabIdFetchJobs.get(tabId).status === 1) {
+        && mapTabIdFetchJobs.get(tabId).status !== FetchJobState.NOT_STARTED) {
         throw "Already started a Fetch Job for current tab";
     }
+
+    // Stop HTTP listeners
+    unregisterHTTPListeners();
 
     const fetchJob = new FetchJob(dsid, arr_headers);
     mapTabIdFetchJobs.set(tabId, fetchJob);
     fetchJob.start();
 }
 
-function stopFetchJob(tabId) {
-    mapTabIdFetchJobs.has(tabId) && mapTabIdFetchJobs.get(tabId).stop();
+function abortFetchJob(tabId) {
+    mapTabIdFetchJobs.has(tabId) && mapTabIdFetchJobs.get(tabId).abort();
 }
 
 // Reset all global variables
