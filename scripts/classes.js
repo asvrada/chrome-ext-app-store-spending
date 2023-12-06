@@ -203,15 +203,20 @@ class FetchJob {
     async start() {
         this.status = FetchJobState.RUNNING;
 
-        let result = await this.doFetch(null);
-        this.history.visit(result.data);
-
-        while (this.status === FetchJobState.RUNNING && result.nextBatchId !== null) {
-            // Sleep
-            await new Promise(r => setTimeout(r, 400));
-
-            result = await this.doFetch(result.nextBatchId);
+        try {
+            let result = await this.doFetch(null);
             this.history.visit(result.data);
+
+            while (this.status === FetchJobState.RUNNING && result.nextBatchId !== null) {
+                // Sleep
+                await new Promise(r => setTimeout(r, 400));
+
+                result = await this.doFetch(result.nextBatchId);
+                this.history.visit(result.data);
+            }
+        } catch (e) {
+            this.status = FetchJobState.ABORTED;
+            console.error(e);
         }
     }
 
