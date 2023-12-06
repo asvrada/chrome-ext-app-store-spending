@@ -33,6 +33,10 @@ class Currency {
         }
 
         currency.amount = parseFloat(amount.substring(index));
+        if (isNaN(currency.amount)) {
+            console.error("Failed to parse", amount);
+            currency.amount = 0;
+        }
         currency.currency = amount.substring(0, index);
 
         return currency;
