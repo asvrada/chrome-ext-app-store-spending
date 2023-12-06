@@ -1,14 +1,18 @@
-import { RequestHistory, FetchJob } from "./classes.js";
+import { Purchase, RequestHistory, FetchJob } from "./classes.js";
+import { FreeItemFilter, SingleEntryConverter, TotalAmountAggregator } from "./postprocessing.js";
 
 // CONST
 // Listen HTTP requests to this Apple website only
 const URLS = ["*://reportaproblem.apple.com/api/purchase/search/*"];
 
 // GLOBAL VARIABLES
-/** @type {RequestHistory} */
+/** @type {RequestHistory} History of all HTTP Request that are made to our target URL */
 let requestHistory = null;
-/** @type {Map<string, FetchJob>} */
+/** @type {Map<string, FetchJob>} Map of FetchJob for each browser Tab */
 let mapTabIdFetchJobs = null;
+
+/** @type {Map<string, Array<Purchase>>} Final list of purchases */
+let mapTabIdResults = null;
 
 function registerHTTPListeners() {
     chrome.webRequest.onBeforeRequest.addListener((details) => {
@@ -49,7 +53,7 @@ function registerListeners() {
     });
 }
 
-function startFetchJob(tabId) {
+async function startFetchJob(tabId) {
     if (requestHistory.lastTabId === null
         || requestHistory.lastRequestId === null) {
         throw "Refresh page and try again";
@@ -71,19 +75,37 @@ function startFetchJob(tabId) {
     const fetchJob = new FetchJob(dsid, arr_headers);
     mapTabIdFetchJobs.set(tabId, fetchJob);
 
-    fetchJob.start();
+    await fetchJob.start();
+    postprocessing(tabId, fetchJob);
+}
+
+function postprocessing(tabId, fetchJob) {
+    const filter1 = new FreeItemFilter();
+    filter1.filter(fetchJob.history);
+
+    const converter1 = new SingleEntryConverter();
+    const data = converter1.convert(fetchJob.history);
+    console.log(data);
+
+    const aggregator = new TotalAmountAggregator();
+    const totalAmount = aggregator.aggregate(data);
+    console.log(totalAmount);
+
+    mapTabIdResults.set(tabId, {
+        purchases: data,
+        amount: totalAmount
+    });
 }
 
 function abortFetchJob(tabId) {
     mapTabIdFetchJobs.has(tabId) && mapTabIdFetchJobs.get(tabId).abort();
-
-    console.log(mapTabIdFetchJobs);
 }
 
 // Reset all global variables
 function reset() {
     requestHistory = new RequestHistory();
     mapTabIdFetchJobs = new Map();
+    mapTabIdResults = new Map();
 }
 
 (function main() {

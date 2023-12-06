@@ -140,6 +140,24 @@ class Item {
 }
 
 /**
+ * An entry that represents a purchase of a single item (App, Movie, Song, etc)
+ */
+class Purchase {
+    constructor() {
+        /** @type {Date} */
+        this.date = null;
+
+        /** @type {string} */
+        this.name = null;
+        /** @type {string} */
+        this.type = null;
+
+        /** @type {Currency} Amount, including tax */
+        this.amountPaid = null;
+    }
+}
+
+/**
  * Store purchase history for a single day
  */
 class PurchaseDay {
@@ -238,6 +256,7 @@ class FetchJob {
         this.dsid = dsid;
         this.headers = {};
         this.status = FetchJobState.NOT_STARTED;
+        /** @type {PurchaseHistory} Store all purchases history here */
         this.history = new PurchaseHistory();
 
         // convert array of headers into dict
@@ -260,7 +279,8 @@ class FetchJob {
             let result = await this.doFetch(null);
             this.history.visit(result.data);
 
-            while (this.status === FetchJobState.RUNNING && result.nextBatchId !== null) {
+            while (this.status === FetchJobState.RUNNING
+                && result.nextBatchId !== null) {
                 // Sleep
                 await new Promise(r => setTimeout(r, 400));
 
@@ -314,8 +334,10 @@ class FetchJob {
 }
 
 export {
+    Currency,
     RequestHistory,
     Item,
+    Purchase,
     PurchaseDay,
     PurchaseHistory,
     FetchJob,
