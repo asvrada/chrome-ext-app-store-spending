@@ -41,10 +41,8 @@ function initUI() {
         });
 
     // Register button callback
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', () => {
         btnStartAnalyze.addEventListener('click', onBtnStartAnalyze, false);
-    }, false)
-    document.addEventListener('DOMContentLoaded', function () {
         btnAbortAnalyze.addEventListener('click', onBtnAbortAnalyze, false);
     }, false)
 

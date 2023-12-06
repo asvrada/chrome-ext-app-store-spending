@@ -9,7 +9,9 @@ const FetchJobState = {
 };
 
 // GLOBAL VARIABLES
+/** @type {RequestHistory} */
 let requestHistory = null;
+/** @type {Map<string, FetchJob>} */
 let mapTabIdFetchJobs = null;
 
 // Store HTTP request history
@@ -17,18 +19,31 @@ let mapTabIdFetchJobs = null;
 class RequestHistory {
     constructor() {
         // Map<<tabId, requestId>, dsid>>
+        /** @type {Map<string, string>} */
         this.mapTabIdDsid = new Map();
         // Map<<tabId, requestId>, dsid>>
+        /** @type {Map<string, Array<{name: string, value: string}>} */
         this.mapTabIdHeaders = new Map();
 
         this.lastTabId = null;
         this.lastRequestId = null;
     }
 
+    /**
+     * Combine tabId and requestId into a key
+     * @param {number} tabId 
+     * @param {string} requestId 
+     * @returns {string} A key for the Map
+     */
     toKey(tabId, requestId) {
         return tabId.toString() + "-" + requestId.toString();
     }
 
+    /**
+     * Separate tabId and requestId from a key 
+     * @param {string} key 
+     * @returns {{tabId: string, requestId: string}}
+     */
     fromKey(key) {
         let arr = key.split("-");
         return {
@@ -74,10 +89,113 @@ class RequestHistory {
     }
 }
 
+class Item {
+    constructor(name, type, amount) {
+        // nameForDisplay
+        /** @type {string} */
+        this.name = name;
+        // mediaType
+        /** @type {string} */
+        this.type = type;
+        // amountPaid
+        // todo: change to track currency
+        /** @type {string} */
+        this.amountPaid = amount;
+    }
+}
+
+class PurchaseDay {
+    constructor() {
+        // purchaseDate
+        /** @type {Date} */
+        this.date = null;
+        // estimatedTotalAmount
+        // todo: change to track currency
+        /** @type {string} */
+        this.totalAmount = null;
+        // List of Item
+        // plis
+        /** @type {Array<Item>} */
+        this.items = [];
+    }
+
+    /**
+     * Add an item to purchase history for this day
+     * @param {Item} item A Item class
+     */
+    addItem(item) {
+        this.items.push(item);
+    }
+}
+
+// Store the purchase history
+class PurchaseHistory {
+    constructor() {
+        /** @type {string | null} */
+        this.nextBatchId = null;
+        /** @type {boolean} */
+        this.initialBatch = true;
+        /** @type {Array<PurchaseDay>} */
+        this.days = [];
+    }
+
+    /**
+     * Parse a single purchase JSON object
+     * @param {any} purchase The JSON object from HTTP request
+     */
+    handlePurchase(purchase) {
+        const purchaseDay = new PurchaseDay();
+        this.days.push(purchaseDay);
+
+        purchaseDay.date = new Date(purchase["purchaseDate"]);
+        purchaseDay.totalAmount = purchase["estimatedTotalAmount"];
+
+        const items = purchase["plis"];
+        items.forEach((item) => {
+            const name = item["localizedContent"]["nameForDisplay"];
+            const type = item["localizedContent"]["mediaType"];
+            const amount = item["amountPaid"];
+
+            const purchaseItem = new Item(name, type, amount);
+            purchaseDay.addItem(purchaseItem);
+        });
+    }
+
+    /**
+     * Handle a HTTP request
+     * @param {*} data JSON data from the HTTP request
+     */
+    visit(data) {
+        const currentBatchId = data["query"]["batchId"];
+
+        if (!this.initialBatch && currentBatchId !== this.nextBatchId) {
+            throw "Batch ID mismatch";
+        }
+
+        if (this.initialBatch) {
+            this.initialBatch = false;
+        }
+
+        this.nextBatchId = data["nextBatchId"] === "" ? null : data["nextBatchId"];
+
+        const purchases = data["purchases"];
+        purchases.forEach((purchase) => {
+            this.handlePurchase(purchase);
+        });
+    }
+}
+
 class FetchJob {
+    /**
+     * Create a Fetch Job for App Store Account
+     * @param {string} dsid 
+     * @param {Array<{name: string, value: string}} arr_headers 
+     */
     constructor(dsid, arr_headers) {
         this.dsid = dsid;
         this.headers = {};
+        this.status = FetchJobState.NOT_STARTED;
+        this.history = new PurchaseHistory();
 
         // convert array of headers into dict
         for (const each of arr_headers) {
@@ -85,8 +203,6 @@ class FetchJob {
             let v = each["value"];
             this.headers[k] = v;
         }
-
-        this.status = FetchJobState.NOT_STARTED;
     }
 
     abort() {
@@ -98,16 +214,22 @@ class FetchJob {
         this.status = FetchJobState.RUNNING;
 
         let result = await this.doFetch(null);
+        this.history.visit(result.data);
 
         while (this.status === FetchJobState.RUNNING && result.nextBatchId !== null) {
             // Sleep
             await new Promise(r => setTimeout(r, 400));
 
             result = await this.doFetch(result.nextBatchId);
+            this.history.visit(result.data);
         }
     }
 
-    // Fetch once
+    /**
+     * Call fetch once for given batchId
+     * @param {string} batchId 
+     * @returns {Promise<{nextBatchId: string, data: any}>}
+     */
     async doFetch(batchId) {
         const body = batchId === null ? {
             dsid: this.dsid,
@@ -138,7 +260,7 @@ class FetchJob {
 
         return {
             nextBatchId,
-            purchases: data.purchases
+            data
         };
     }
 }
@@ -205,11 +327,14 @@ function startFetchJob(tabId) {
 
     const fetchJob = new FetchJob(dsid, arr_headers);
     mapTabIdFetchJobs.set(tabId, fetchJob);
+
     fetchJob.start();
 }
 
 function abortFetchJob(tabId) {
     mapTabIdFetchJobs.has(tabId) && mapTabIdFetchJobs.get(tabId).abort();
+
+    console.log(mapTabIdFetchJobs);
 }
 
 // Reset all global variables
