@@ -4,14 +4,49 @@ const FetchJobState = {
     ABORTED: 2
 };
 
-// Store HTTP request history
-// Key: tab ID
+/**
+ * A simple object that represents currency and amount of this currency
+ */
+class Currency {
+    constructor() {
+        /** @type {number} */
+        this.amount = null;
+        /** @type {string} Symbol of currency */
+        this.currency = null;
+    }
+
+    /**
+     * Parse a string into a Currency object
+     * @param {string} amount 
+     * @returns {Currency}
+     */
+    static from(amount) {
+        const currency = new Currency();
+
+        // Find index of first digit
+        let index = 0;
+        while (index < amount.length && !('0' <= amount[index] && amount[index] <= '9')) {
+            index++;
+        }
+        if (index == amount.length) {
+            throw "Invalid amount", amount;
+        }
+
+        currency.amount = parseFloat(amount.substring(index));
+        currency.currency = amount.substring(0, index);
+
+        return currency;
+    }
+}
+
+/**
+ * Store HTTP request history
+ * So we can find the dsid and headers for the next HTTP request
+ */
 class RequestHistory {
     constructor() {
-        // Map<<tabId, requestId>, dsid>>
         /** @type {Map<string, string>} */
         this.mapTabIdDsid = new Map();
-        // Map<<tabId, requestId>, dsid>>
         /** @type {Map<string, Array<{name: string, value: string}>} */
         this.mapTabIdHeaders = new Map();
 
@@ -80,6 +115,12 @@ class RequestHistory {
 }
 
 class Item {
+    /**
+     * 
+     * @param {string} name 
+     * @param {string} type 
+     * @param {string} amount 
+     */
     constructor(name, type, amount) {
         // nameForDisplay
         /** @type {string} */
@@ -89,11 +130,14 @@ class Item {
         this.type = type;
         // amountPaid
         // todo: change to track currency
-        /** @type {string} */
-        this.amountPaid = amount;
+        /** @type {Currency} */
+        this.amountPaid = Currency.from(amount);
     }
 }
 
+/**
+ * Store purchase history for a single day
+ */
 class PurchaseDay {
     constructor() {
         // purchaseDate
@@ -101,7 +145,7 @@ class PurchaseDay {
         this.date = null;
         // estimatedTotalAmount
         // todo: change to track currency
-        /** @type {string} */
+        /** @type {Currency} */
         this.totalAmount = null;
         // List of Item
         // plis
@@ -118,7 +162,9 @@ class PurchaseDay {
     }
 }
 
-// Store the purchase history
+/**
+ * Store entire purchase history for a given apple account
+ */
 class PurchaseHistory {
     constructor() {
         /** @type {string | null} */
@@ -138,7 +184,7 @@ class PurchaseHistory {
         this.days.push(purchaseDay);
 
         purchaseDay.date = new Date(purchase["purchaseDate"]);
-        purchaseDay.totalAmount = purchase["estimatedTotalAmount"];
+        purchaseDay.totalAmount = Currency.from(purchase["estimatedTotalAmount"]);
 
         const items = purchase["plis"];
         items.forEach((item) => {
@@ -175,9 +221,12 @@ class PurchaseHistory {
     }
 }
 
+/**
+ * A component that fetches data from Apple website
+ */
 class FetchJob {
     /**
-     * Create a Fetch Job for App Store Account
+     * 
      * @param {string} dsid 
      * @param {Array<{name: string, value: string}} arr_headers 
      */
@@ -260,4 +309,11 @@ class FetchJob {
     }
 }
 
-export { RequestHistory, Item, PurchaseDay, PurchaseHistory, FetchJob, FetchJobState };
+export {
+    RequestHistory,
+    Item,
+    PurchaseDay,
+    PurchaseHistory,
+    FetchJob,
+    FetchJobState
+};
