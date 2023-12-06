@@ -77,6 +77,7 @@ async function startFetchJob(tabId) {
 
     await fetchJob.start();
     postprocessing(tabId, fetchJob);
+    
 }
 
 function postprocessing(tabId, fetchJob) {
@@ -87,8 +88,8 @@ function postprocessing(tabId, fetchJob) {
     const data = converter1.convert(fetchJob.history);
     console.log(data);
 
-    const aggregator = new TotalAmountAggregator();
-    const totalAmount = aggregator.aggregate(data);
+    const aggregator1 = new TotalAmountAggregator();
+    const totalAmount = aggregator1.aggregate(data);
     console.log(totalAmount);
 
     mapTabIdResults.set(tabId, {
