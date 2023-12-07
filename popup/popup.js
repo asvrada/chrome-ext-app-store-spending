@@ -1,13 +1,65 @@
 const ID_BTN_START_ANALYZE = "btnStartAnalyze";
 const ID_BTN_ABORT_ANALYZE = "btnStopAnalyze";
 const ID_DIV_WRONG_URL = "errorWrongUrl";
+const ID_DIV_RESULTS = "results";
 const URL_REPORT_PROBLEM_APPLE = "reportaproblem.apple.com";
 
 const btnStartAnalyze = document.getElementById(ID_BTN_START_ANALYZE);
 const btnAbortAnalyze = document.getElementById(ID_BTN_ABORT_ANALYZE);
 const divErrorWrongUrl = document.getElementById(ID_DIV_WRONG_URL);
+const divResults = document.getElementById(ID_DIV_RESULTS);
 
 let currentTab = null;
+let serviceWorkerInterface = null;
+
+class ServiceWorkerInterface {
+    constructor() {
+        this.port = chrome.runtime.connect({ name: "asurada-app-store-spending" });
+
+        this.port.onMessage.addListener((msg) => this.handleOnMessage(msg));
+    }
+
+    /**
+     * Handle message from service worker
+     * @param {{type: string, payload: any}} msg 
+     */
+    handleOnMessage(msg) {
+        console.log("Got message from service worker", msg);
+        const { type, payload } = msg;
+
+        if (type === "UPDATE") {
+            const results = payload.results;
+            if (results === null) {
+                // No final results yet
+                return;
+            }
+
+            // Update UI to display the results
+            let html = "";
+            for (const currency in results) {
+                html += `<p>${currency}${results[currency]}</p>`;
+            }
+            divResults.innerHTML = html;
+        }
+    }
+
+    /**
+     * Send a message to service worker
+     * @param {{type: string, payload: any}} message Outbound message to service worker
+     */
+    sendMessage(message) {
+        if (!this.port) {
+            return;
+        }
+
+        const tabId = currentTab.id;
+
+        this.port.postMessage({
+            tabId,
+            ...message
+        });
+    }
+}
 
 function onBtnStartAnalyze() {
     chrome.runtime.sendMessage({ message: "START", tabId: currentTab.id });
@@ -19,6 +71,16 @@ function onBtnAbortAnalyze() {
 
 function initUI() {
     divErrorWrongUrl.style.display = "none";
+}
+
+function registerListeners() {
+    // Register button callback
+    document.addEventListener('DOMContentLoaded', () => {
+        btnStartAnalyze.addEventListener('click', onBtnStartAnalyze, false);
+        btnAbortAnalyze.addEventListener('click', onBtnAbortAnalyze, false);
+    }, false)
+
+    serviceWorkerInterface = new ServiceWorkerInterface();
 }
 
 (function main() {
@@ -34,17 +96,16 @@ function initUI() {
                 && innerCurrentTab.url.includes(URL_REPORT_PROBLEM_APPLE)) {
 
                 currentTab = innerCurrentTab;
+
+                // Get update
+                serviceWorkerInterface.sendMessage({ type: "UPDATE" });
             } else {
                 // Show error on UI
                 divErrorWrongUrl.style.display = "block";
             }
         });
 
-    // Register button callback
-    document.addEventListener('DOMContentLoaded', () => {
-        btnStartAnalyze.addEventListener('click', onBtnStartAnalyze, false);
-        btnAbortAnalyze.addEventListener('click', onBtnAbortAnalyze, false);
-    }, false)
+    registerListeners();
 
     // Init UI
     initUI();

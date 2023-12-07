@@ -1,4 +1,4 @@
-import { Purchase, RequestHistory, FetchJob } from "./classes.js";
+import { Purchase, RequestHistory, FetchJob, FetchJobState } from "./classes.js";
 import { FreeItemFilter, SingleEntryConverter, TotalAmountAggregator } from "./postprocessing.js";
 
 // CONST
@@ -10,9 +10,74 @@ const URLS = ["*://reportaproblem.apple.com/api/purchase/search/*"];
 let requestHistory = null;
 /** @type {Map<string, FetchJob>} Map of FetchJob for each browser Tab */
 let mapTabIdFetchJobs = null;
-
 /** @type {Map<string, Array<Purchase>>} Final list of purchases */
 let mapTabIdResults = null;
+let popupMessenger = null;
+
+class PopupMessageInterface {
+    constructor() {
+        this.port = null;
+
+        // service worker accepts incoming long connect from popup.js
+        chrome.runtime.onConnect.addListener((port) => this.handleOnConnect(port));
+    }
+
+    handleOnDisconnect() {
+        this.port = null;
+    }
+
+    handleOnConnect(port) {
+        // Ignore request from others
+        if (port.name !== "asurada-app-store-spending") {
+            return;
+        }
+
+        // cleanup old
+        this.port && this.port.disconnect();
+        // assign new
+        this.port = port;
+
+        this.port.onMessage.addListener((msg) => this.handleOnMessage(msg));
+        this.port.onDisconnect.addListener(() => this.handleOnDisconnect());
+    }
+
+    /**
+     * Handle a message from popup
+     * @param {{type: string, tabId: string, payload: any}} msg Incoming message from popup
+     */
+    handleOnMessage(msg) {
+        console.log("Got message from popup", msg);
+        const { type, tabId, payload } = msg;
+
+        if (type === "UPDATE") {
+            // Return a current state of everything to popup
+
+            // A map of currency and spending
+            const results = mapTabIdResults.has(tabId)
+                ? Object.fromEntries(mapTabIdResults.get(tabId)["amount"])
+                : null;
+
+            this.sendMessage({
+                type: "UPDATE",
+                payload: {
+                    results
+                }
+            });
+        }
+    }
+
+    /**
+     * Send a message to popup
+     * @param {{type: string, payload: any}} message Outbound message to popup
+     */
+    sendMessage(message) {
+        if (!this.port) {
+            return;
+        }
+
+        this.port.postMessage(message);
+    }
+}
 
 function registerHTTPListeners() {
     chrome.webRequest.onBeforeRequest.addListener((details) => {
@@ -77,7 +142,7 @@ async function startFetchJob(tabId) {
 
     await fetchJob.start();
     postprocessing(tabId, fetchJob);
-    
+
 }
 
 function postprocessing(tabId, fetchJob) {
@@ -96,6 +161,13 @@ function postprocessing(tabId, fetchJob) {
         purchases: data,
         amount: totalAmount
     });
+
+    popupMessenger.sendMessage({
+        type: "UPDATE",
+        payload: {
+            results: Object.fromEntries(totalAmount)
+        }
+    })
 }
 
 function abortFetchJob(tabId) {
@@ -107,10 +179,11 @@ function reset() {
     requestHistory = new RequestHistory();
     mapTabIdFetchJobs = new Map();
     mapTabIdResults = new Map();
+    popupMessenger = new PopupMessageInterface();
 }
 
 (function main() {
-    console.log("background.js main called",);
+    console.log("service-worker.js main called",);
 
     reset();
     registerListeners();

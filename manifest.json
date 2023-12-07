@@ -14,7 +14,7 @@
         "default_icon": "images/icon-32.png"
     },
     "background": {
-        "service_worker": "scripts/background.js",
+        "service_worker": "scripts/service-worker.js",
         "type": "module"
     },
     "host_permissions": [

@@ -97,7 +97,6 @@ class RequestHistory {
 
         // Set Map
         this.mapTabIdDsid.set(key, dsid);
-        // console.log("map_tabId_dsid", this.map_tabId_dsid);
     }
 
     recordSendHeaders(details) {
@@ -110,7 +109,6 @@ class RequestHistory {
 
         // Set Map
         this.mapTabIdHeaders.set(key, headers);
-        // console.log("map_tabId_headers", this.map_tabId_headers);
 
         // Set the last tabId and requestId here
         this.lastTabId = tabId;
