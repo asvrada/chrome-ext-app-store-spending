@@ -1,5 +1,3 @@
-import {State} from "./service-worker.js";
-
 const FetchJobState = {
     NOT_STARTED: 0,
     RUNNING: 1,
