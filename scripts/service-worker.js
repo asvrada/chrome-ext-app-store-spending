@@ -6,13 +6,25 @@ import { FreeItemFilter, SingleEntryConverter, TotalAmountAggregator } from "./p
 const URLS = ["*://reportaproblem.apple.com/api/purchase/search/*"];
 
 // GLOBAL VARIABLES
-/** @type {RequestHistory} History of all HTTP Request that are made to our target URL */
-let requestHistory = null;
-/** @type {Map<string, FetchJob>} Map of FetchJob for each browser Tab */
-let mapTabIdFetchJobs = null;
-/** @type {Map<string, Array<Purchase>>} Final list of purchases */
 let mapTabIdResults = null;
 let popupMessenger = null;
+/** @type {State | null} Service Worker state */
+let state = null;
+
+// Stores every variable the service worker needs
+class State {
+    constructor() {
+        /** @type {} Store HTTP request related information */
+        this.requestHistory = new RequestHistory();
+
+        /** @type {Map<string, {fetchJob: FetchJob, results: {purchases: Array<Purchase>, amount: Array<Currency>}}} Store state for each tabId */
+        this.mapTabIdState = new Map();
+    }
+
+    static getInstance() {
+        return state;
+    }
+}
 
 class PopupMessageInterface {
     constructor() {
@@ -80,6 +92,7 @@ class PopupMessageInterface {
 }
 
 function registerHTTPListeners() {
+    const requestHistory = State.getInstance().requestHistory;
     chrome.webRequest.onBeforeRequest.addListener((details) => {
         requestHistory.recordBeforeRequest(details);
     }, {
@@ -119,6 +132,7 @@ function registerListeners() {
 }
 
 async function startFetchJob(tabId) {
+    const requestHistory = State.getInstance().requestHistory;
     if (requestHistory.lastTabId === null
         || requestHistory.lastRequestId === null) {
         throw "Refresh page and try again";
@@ -129,6 +143,7 @@ async function startFetchJob(tabId) {
     const arr_headers = requestHistory.mapTabIdHeaders.get(key);
 
     // Create a FetchJob for this tabId
+    const mapTabIdFetchJobs = State.getInstance().mapTabIdState;
     if (mapTabIdFetchJobs.has(tabId)
         && mapTabIdFetchJobs.get(tabId).status !== FetchJobState.NOT_STARTED) {
         throw "Already started a Fetch Job for current tab";
@@ -151,11 +166,11 @@ function postprocessing(tabId, fetchJob) {
 
     const converter1 = new SingleEntryConverter();
     const data = converter1.convert(fetchJob.history);
-    console.log(data);
+    console.log("Calculated amount for each item", data);
 
     const aggregator1 = new TotalAmountAggregator();
     const totalAmount = aggregator1.aggregate(data);
-    console.log(totalAmount);
+    console.log("Total cost of all purchases", totalAmount);
 
     mapTabIdResults.set(tabId, {
         purchases: data,
@@ -171,13 +186,14 @@ function postprocessing(tabId, fetchJob) {
 }
 
 function abortFetchJob(tabId) {
+    const mapTabIdFetchJobs = State.getInstance().mapTabIdState;
     mapTabIdFetchJobs.has(tabId) && mapTabIdFetchJobs.get(tabId).abort();
 }
 
 // Reset all global variables
 function reset() {
-    requestHistory = new RequestHistory();
-    mapTabIdFetchJobs = new Map();
+    state = new State();
+
     mapTabIdResults = new Map();
     popupMessenger = new PopupMessageInterface();
 }
@@ -188,3 +204,6 @@ function reset() {
     reset();
     registerListeners();
 })();
+
+// So other components can call State.getInstance
+export {State};
