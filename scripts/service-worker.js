@@ -13,7 +13,7 @@ let state = null;
 // Stores every variable the service worker needs
 class State {
     constructor() {
-        /** @type {} Store HTTP request related information */
+        /** @type {RequestHistory} Store HTTP request related information */
         this.requestHistory = new RequestHistory();
 
         /** 
@@ -52,7 +52,7 @@ class State {
      * @param {number} tabId 
      * @returns {{fetchJob: null | FetchJob, results: {purchases: null | Array<Purchase>, totalAmount: null | Array<Currency>}}}
      */
-    getStateById(tabId) {
+    getState(tabId) {
         if (!this.mapTabIdState.has(tabId)) {
             throw "Unexpected: tabId doesn't exist";
         }
@@ -65,7 +65,7 @@ class State {
      * @param {number} tabId 
      * @returns {null | FetchJob}
      */
-    getFetchJobByTabId(tabId) {
+    getFetchJob(tabId) {
         this._createStateIfMissing(tabId);
 
         return this.mapTabIdState.get(tabId).fetchJob;
@@ -76,7 +76,7 @@ class State {
      * @param {number} tabId 
      * @returns {FetchJob} the created FetchJob
      */
-    createFetchJobByTabId(tabId, dsid, arr_headers) {
+    createFetchJob(tabId, dsid, arr_headers) {
         this._createStateIfMissing(tabId);
 
         const stateTabId = this.mapTabIdState.get(tabId);
@@ -95,7 +95,7 @@ class State {
      * @param {Array<Purchase>} purchase 
      */
     setPurchases(tabId, purchase) {
-        const results = this.getStateById(tabId).results;
+        const results = this.getState(tabId).results;
 
         results.purchases = purchase;
     }
@@ -106,7 +106,7 @@ class State {
      * @param {Array<Currency>} totalAmount 
      */
     setTotalAmount(tabId, totalAmount) {
-        const results = this.getStateById(tabId).results;
+        const results = this.getState(tabId).results;
 
         results.totalAmount = totalAmount;
     }
@@ -152,7 +152,7 @@ class PopupMessageInterface {
 
             // TODO: now is an array
             // A map of currency and spending
-            const totalAmount = State.getInstance().getStateById(tabId).results.totalAmount;
+            const totalAmount = State.getInstance().getState(tabId).results.totalAmount;
 
             const results = totalAmount
                 ? Object.fromEntries(totalAmount)
@@ -232,7 +232,7 @@ async function startFetchJob(tabId) {
     const arr_headers = requestHistory.mapTabIdHeaders.get(key);
 
     // Create a FetchJob for this tabId
-    const existingFetchJob = State.getInstance().getFetchJobByTabId(tabId);
+    const existingFetchJob = State.getInstance().getFetchJob(tabId);
     if (existingFetchJob !== null && existingFetchJob.status !== FetchJobState.NOT_STARTED) {
         throw "startFetchJob failed: Already started a Fetch Job for current tab";
     }
@@ -242,7 +242,7 @@ async function startFetchJob(tabId) {
     unregisterHTTPListeners();
 
     // Create new FetchJob
-    const fetchJob = State.getInstance().createFetchJobByTabId(tabId, dsid, arr_headers);
+    const fetchJob = State.getInstance().createFetchJob(tabId, dsid, arr_headers);
 
     await fetchJob.start();
     postprocessing(tabId, fetchJob);
@@ -273,7 +273,7 @@ function postprocessing(tabId, fetchJob) {
 }
 
 function abortFetchJob(tabId) {
-    const fetchJob = State.getInstance().getFetchJobByTabId(tabId);
+    const fetchJob = State.getInstance().getFetchJob(tabId);
     if (fetchJob !== null) {
         fetchJob.abort();
     }
