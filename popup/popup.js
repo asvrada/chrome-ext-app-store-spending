@@ -9,6 +9,7 @@ const btnAbortAnalyze = document.getElementById(ID_BTN_ABORT_ANALYZE);
 const divErrorWrongUrl = document.getElementById(ID_DIV_WRONG_URL);
 const divResults = document.getElementById(ID_DIV_RESULTS);
 
+/** @type {{id: number, url: string}} */
 let currentTab = null;
 let serviceWorkerInterface = null;
 
@@ -52,10 +53,8 @@ class ServiceWorkerInterface {
             return;
         }
 
-        const tabId = currentTab.id;
-
         this.port.postMessage({
-            tabId,
+            tabId: currentTab.id,
             ...message
         });
     }
