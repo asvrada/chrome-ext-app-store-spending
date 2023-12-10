@@ -9,6 +9,7 @@ const btnAbortAnalyze = document.getElementById(ID_BTN_ABORT_ANALYZE);
 const divErrorWrongUrl = document.getElementById(ID_DIV_WRONG_URL);
 const divResults = document.getElementById(ID_DIV_RESULTS);
 
+/** @type {{id: number, url: string}} */
 let currentTab = null;
 let serviceWorkerInterface = null;
 
@@ -28,17 +29,18 @@ class ServiceWorkerInterface {
         const { type, payload } = msg;
 
         if (type === "UPDATE") {
-            const results = payload.results;
-            if (results === null) {
+            /** @type {Array<{currency: string, amount: number}>} */
+            const totalAmount = payload.totalAmount;
+            if (totalAmount === null) {
                 // No final results yet
                 return;
             }
 
             // Update UI to display the results
             let html = "";
-            for (const currency in results) {
-                html += `<p>${currency}${results[currency]}</p>`;
-            }
+            totalAmount.forEach((each) => {
+                html += `<p>${each.currency}${each.amount}</p>`;
+            });
             divResults.innerHTML = html;
         }
     }
@@ -52,10 +54,8 @@ class ServiceWorkerInterface {
             return;
         }
 
-        const tabId = currentTab.id;
-
         this.port.postMessage({
-            tabId,
+            tabId: currentTab.id,
             ...message
         });
     }
