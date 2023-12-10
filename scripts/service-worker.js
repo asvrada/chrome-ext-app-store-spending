@@ -6,6 +6,7 @@ import { FreeItemFilter, SingleEntryConverter, TotalAmountAggregator } from "./p
 const URLS = ["*://reportaproblem.apple.com/api/purchase/search/*"];
 
 // GLOBAL VARIABLES
+/** @type {PopupMessageInterface} */
 let popupMessenger = null;
 /** @type {State | null} Service Worker state */
 let state = null;
@@ -110,6 +111,19 @@ class State {
 
         results.totalAmount = totalAmount;
     }
+
+    sendLoadState() {
+        // todo, how to get tabId
+        const results = this.getState(tabId).results;
+
+        popupMessenger.sendMessage({
+            type: "LOAD_STATE",
+            payload: {
+                purchases: null, // ignore for now
+                totalAmount: results.totalAmount
+            }
+        });
+    }
 }
 
 class PopupMessageInterface {
@@ -147,17 +161,15 @@ class PopupMessageInterface {
         console.log("Got message from popup", msg);
         const { type, tabId, payload } = msg;
 
-        if (type === "UPDATE") {
-            // Return a current state of everything to popup
-
-            const state = State.getInstance().getState(tabId);
-
-            this.sendMessage({
-                type: "UPDATE",
-                payload: {
-                    totalAmount: state === null ? null : state.results.totalAmount
-                }
-            });
+        if (type === "START") {
+            startFetchJob(tabId);
+        } else if (type === "ABORT") {
+            abortFetchJob(tabId);
+        } else if (type === "GET_STATE") {
+            // TODO
+        } else {
+            // Unrecognized message
+            console.error("Unrecognized message from popup", msg);
         }
     }
 
@@ -166,7 +178,9 @@ class PopupMessageInterface {
      * @param {{type: string, payload: any}} message Outbound message to popup
      */
     sendMessage(message) {
+        console.log("Sending message to popup", message);
         if (!this.port) {
+            console.error("Send failed, port not open");
             return;
         }
 
@@ -197,23 +211,12 @@ function unregisterHTTPListeners() {
 
 function registerListeners() {
     registerHTTPListeners();
-
-    // Listen to messages from popup.js
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        console.log("Got message", request);
-
-        if (request.message === "START") {
-            const tabId = request.tabId;
-
-            startFetchJob(tabId);
-        } else if (request.message === "ABORT") {
-            const tabId = request.tabId;
-
-            abortFetchJob(tabId);
-        }
-    });
 }
 
+/**
+ * 
+ * @param {number} tabId 
+ */
 async function startFetchJob(tabId) {
     const requestHistory = State.getInstance().requestHistory;
     if (requestHistory.lastTabId === null
@@ -227,11 +230,13 @@ async function startFetchJob(tabId) {
 
     // Create a FetchJob for this tabId
     const existingFetchJob = State.getInstance().getFetchJob(tabId);
-    if (existingFetchJob !== null && existingFetchJob.status !== FetchJobState.NOT_STARTED) {
+    if (existingFetchJob !== null
+        // Can only start a Fetch Job if it's NOT_STARTED
+        && existingFetchJob.status !== FetchJobState.NOT_STARTED) {
         throw "startFetchJob failed: Already started a Fetch Job for current tab";
     }
 
-    // todo: re-check
+    // todo: re-think
     // Stop HTTP listeners
     unregisterHTTPListeners();
 
@@ -257,19 +262,41 @@ function postprocessing(tabId, fetchJob) {
     State.getInstance().setPurchases(tabId, purchase);
     State.getInstance().setTotalAmount(tabId, totalAmount);
 
+    const state = State.getInstance().getState(tabId);
     popupMessenger.sendMessage({
-        type: "UPDATE",
+        type: "LOAD_STATE",
         payload: {
-            totalAmount
+            state: state.fetchJob.status,
+            results: {
+                purchases: null, // ignore for now
+                totalAmount: state.results.totalAmount
+            }
         }
-    })
+    });
 }
 
+/**
+ * 
+ * @param {number} tabId 
+ */
 function abortFetchJob(tabId) {
     const fetchJob = State.getInstance().getFetchJob(tabId);
-    if (fetchJob !== null) {
-        fetchJob.abort();
+    if (fetchJob === null) {
+        return;
     }
+    fetchJob.abort();
+
+    const state = State.getInstance().getState(tabId);
+    popupMessenger.sendMessage({
+        type: "LOAD_STATE",
+        payload: {
+            state: state.fetchJob.status,
+            results: {
+                purchases: null, // ignore for now
+                totalAmount: state.results.totalAmount
+            }
+        }
+    });
 }
 
 // Reset all global variables

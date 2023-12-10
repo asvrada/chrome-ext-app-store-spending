@@ -1,7 +1,8 @@
 const FetchJobState = {
     NOT_STARTED: 0,
     RUNNING: 1,
-    ABORTED: 2
+    FINISHED: 2,
+    ABORTED: 3
 };
 
 /**
@@ -131,7 +132,6 @@ class Item {
         /** @type {string} */
         this.type = type;
         // amountPaid
-        // todo: change to track currency
         /** @type {Currency} */
         this.amountPaid = Currency.from(amount);
     }
@@ -160,15 +160,11 @@ class Purchase {
  */
 class PurchaseDay {
     constructor() {
-        // purchaseDate
         /** @type {Date} */
         this.date = null;
-        // estimatedTotalAmount
-        // todo: change to track currency
         /** @type {Currency} */
         this.totalAmount = null;
         // List of Item
-        // plis
         /** @type {Array<Item>} */
         this.items = [];
     }
@@ -288,6 +284,10 @@ class FetchJob {
         } catch (e) {
             this.status = FetchJobState.ABORTED;
             console.error(e);
+        }
+
+        if (this.status !== FetchJobState.ABORTED) {
+            this.status = FetchJobState.FINISHED;
         }
     }
 
