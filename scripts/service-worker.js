@@ -150,7 +150,6 @@ class PopupMessageInterface {
         if (type === "UPDATE") {
             // Return a current state of everything to popup
 
-            // TODO: might be null
             const state = State.getInstance().getState(tabId);
 
             this.sendMessage({
