@@ -29,17 +29,18 @@ class ServiceWorkerInterface {
         const { type, payload } = msg;
 
         if (type === "UPDATE") {
-            const results = payload.results;
-            if (results === null) {
+            /** @type {Array<{currency: string, amount: number}>} */
+            const totalAmount = payload.totalAmount;
+            if (totalAmount === null) {
                 // No final results yet
                 return;
             }
 
             // Update UI to display the results
             let html = "";
-            for (const currency in results) {
-                html += `<p>${currency}${results[currency]}</p>`;
-            }
+            totalAmount.forEach((each) => {
+                html += `<p>${each.currency}${each.amount}</p>`;
+            });
             divResults.innerHTML = html;
         }
     }

@@ -48,13 +48,13 @@ class State {
     }
 
     /**
-     * Throw error if tabId doesn't exist
+     * Get, default to null
      * @param {number} tabId 
-     * @returns {{fetchJob: null | FetchJob, results: {purchases: null | Array<Purchase>, totalAmount: null | Array<Currency>}}}
+     * @returns {null | {fetchJob: null | FetchJob, results: {purchases: null | Array<Purchase>, totalAmount: null | Array<Currency>}}}
      */
     getState(tabId) {
         if (!this.mapTabIdState.has(tabId)) {
-            throw "Unexpected: tabId doesn't exist";
+            return null;
         }
 
         return this.mapTabIdState.get(tabId);
@@ -150,18 +150,13 @@ class PopupMessageInterface {
         if (type === "UPDATE") {
             // Return a current state of everything to popup
 
-            // TODO: now is an array
-            // A map of currency and spending
-            const totalAmount = State.getInstance().getState(tabId).results.totalAmount;
-
-            const results = totalAmount
-                ? Object.fromEntries(totalAmount)
-                : null;
+            // TODO: might be null
+            const state = State.getInstance().getState(tabId);
 
             this.sendMessage({
                 type: "UPDATE",
                 payload: {
-                    results
+                    totalAmount: state === null ? null : state.results.totalAmount
                 }
             });
         }
@@ -261,13 +256,12 @@ function postprocessing(tabId, fetchJob) {
     console.log("Total cost of all purchases", totalAmount);
 
     State.getInstance().setPurchases(tabId, purchase);
-    // TODO: wrong type
     State.getInstance().setTotalAmount(tabId, totalAmount);
 
     popupMessenger.sendMessage({
         type: "UPDATE",
         payload: {
-            results: Object.fromEntries(totalAmount)
+            totalAmount
         }
     })
 }

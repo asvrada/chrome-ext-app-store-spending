@@ -99,7 +99,7 @@ class TotalAmountAggregator {
     /**
      * 
      * @param {Array<Purchase>} purchases Array of purchases (result from SingleEntryConverter)
-     * @returns {Map<string, number>}
+     * @returns {Array<Currency>}
      */
     aggregate(purchases) {
         purchases.forEach((each) => {
@@ -113,14 +113,17 @@ class TotalAmountAggregator {
             this.mapCurrencyAmount.set(currency, this.mapCurrencyAmount.get(currency) + amount);
         });
 
-        // Round numbers
-        const mapRoundedNumber = new Map();
+        // Round numbers and convert to array
+        const result = [];
         this.mapCurrencyAmount.forEach((v, k) => {
-            mapRoundedNumber.set(k, roundToTwo(v));
-        });
-        this.mapCurrencyAmount = mapRoundedNumber;
+            const each = new Currency();
+            each.currency = k;
+            each.amount = roundToTwo(v);
 
-        return this.mapCurrencyAmount;
+            result.push(each);
+        });
+
+        return result;
     }
 }
 
