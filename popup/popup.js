@@ -41,9 +41,12 @@ class ServiceWorkerInterface {
             } else if (state === 3) {
                 // ABORTED
                 updateTotalAmount(payload.results.totalAmount);
+            } else if (state === 4) {
+                // NOT_READY
+                // todo: prompt to refresh page
             } else {
                 console.error("Unrecognized state", payload);
-                throw "4???";
+                throw "5???";
             }
         } else if (type === "UPDATE") {
             /** @type {number} 0-100 */

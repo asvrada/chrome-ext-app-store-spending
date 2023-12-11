@@ -28,8 +28,8 @@ type = "LOAD_STATE"
 payload: {
     state: FetchJobState,
     results: {
-        purchases: Array<Purchase>,
-        totalAmount: Array<Currency>
+        purchases: Array<Purchase> | null,
+        totalAmount: Array<Currency> | null
     }
 }
 

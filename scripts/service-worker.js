@@ -19,6 +19,7 @@ class State {
 
         /** 
          * Store state for each tabId
+         * A key-value is only created after user clicks start
          * totalAmount may store difference currency,
          *   this is because App Store account can change region,
          *   thus the currency it uses.
@@ -112,15 +113,31 @@ class State {
         results.totalAmount = totalAmount;
     }
 
-    sendLoadState() {
-        // todo, how to get tabId
-        const results = this.getState(tabId).results;
+    /**
+     * Send current state for given tab to popup
+     * @param {number} tabId 
+     */
+    sendLoadState(tabId) {
+        const state = this.getState(tabId);
+
+        // Determine FetchJobState
+        let status = FetchJobState.NOT_READY;
+        if (state && state.fetchJob) {
+            // Take fetchJob's status if we have one
+            status = state.fetchJob.status;
+        } else if (this.requestHistory.mapTabIdHeaders.has(tabId)) {
+            // Otherwise determine from HTTP request history
+            status = FetchJobState.NOT_STARTED;
+        }
 
         popupMessenger.sendMessage({
             type: "LOAD_STATE",
             payload: {
-                purchases: null, // ignore for now
-                totalAmount: results.totalAmount
+                state: status,
+                results: {
+                    purchases: null, // ignore for now
+                    totalAmount: state ? state.results.totalAmount : null
+                }
             }
         });
     }
@@ -166,7 +183,7 @@ class PopupMessageInterface {
         } else if (type === "ABORT") {
             abortFetchJob(tabId);
         } else if (type === "GET_STATE") {
-            // TODO
+            State.getInstance().sendLoadState(tabId);
         } else {
             // Unrecognized message
             console.error("Unrecognized message from popup", msg);
@@ -245,6 +262,8 @@ async function startFetchJob(tabId) {
 
     await fetchJob.start();
     postprocessing(tabId, fetchJob);
+
+    State.getInstance().sendLoadState(tabId);
 }
 
 function postprocessing(tabId, fetchJob) {
@@ -261,18 +280,6 @@ function postprocessing(tabId, fetchJob) {
 
     State.getInstance().setPurchases(tabId, purchase);
     State.getInstance().setTotalAmount(tabId, totalAmount);
-
-    const state = State.getInstance().getState(tabId);
-    popupMessenger.sendMessage({
-        type: "LOAD_STATE",
-        payload: {
-            state: state.fetchJob.status,
-            results: {
-                purchases: null, // ignore for now
-                totalAmount: state.results.totalAmount
-            }
-        }
-    });
 }
 
 /**
@@ -286,17 +293,7 @@ function abortFetchJob(tabId) {
     }
     fetchJob.abort();
 
-    const state = State.getInstance().getState(tabId);
-    popupMessenger.sendMessage({
-        type: "LOAD_STATE",
-        payload: {
-            state: state.fetchJob.status,
-            results: {
-                purchases: null, // ignore for now
-                totalAmount: state.results.totalAmount
-            }
-        }
-    });
+    State.getInstance().sendLoadState(tabId);
 }
 
 // Reset all global variables

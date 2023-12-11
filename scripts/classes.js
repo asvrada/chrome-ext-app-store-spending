@@ -1,8 +1,14 @@
 const FetchJobState = {
+    // FetchJob ready to start
     NOT_STARTED: 0,
+    // FetchJob running
     RUNNING: 1,
+    // FetchJob finished without error
     FINISHED: 2,
-    ABORTED: 3
+    // FetchJob started but aborted
+    ABORTED: 3,
+    // No dsid info recorded, need to refresh
+    NOT_READY: 4
 };
 
 /**
@@ -55,7 +61,9 @@ class RequestHistory {
         /** @type {Map<string, Array<{name: string, value: string}>} */
         this.mapTabIdHeaders = new Map();
 
+        /** @type {number} */
         this.lastTabId = null;
+        /** @type {string} */
         this.lastRequestId = null;
     }
 
