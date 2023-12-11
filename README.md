@@ -50,7 +50,7 @@ payload: null
 type = "ABORT"
 payload: null
 
-// 3. Get state
-type = "GET_UPDATE"
+// 3. Get latest state
+type = "GET_STATE"
 payload: null
 ```
