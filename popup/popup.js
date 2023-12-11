@@ -7,8 +7,6 @@ const btnStartAnalyze = document.getElementById(ID_BTN_START_ANALYZE);
 const btnAbortAnalyze = document.getElementById(ID_BTN_ABORT_ANALYZE);
 const divResults = document.getElementById(ID_DIV_RESULTS);
 
-/** @type {{id: number, url: string}} */
-let currentTab = null;
 /** @type {ServiceWorkerInterface} */
 let serviceWorkerInterface = null;
 
@@ -64,10 +62,7 @@ class ServiceWorkerInterface {
             return;
         }
 
-        this.port.postMessage({
-            tabId: currentTab.id,
-            ...message
-        });
+        this.port.postMessage(message);
     }
 }
 
@@ -115,18 +110,15 @@ function registerListeners() {
     // Get current Tab
     chrome.tabs.query({ active: true, currentWindow: true },
         (tabs) => {
-            var innerCurrentTab = tabs[0]; // there will be only one in this array
+            var currentTab = tabs[0]; // there will be only one in this array
 
-            if (innerCurrentTab
-                && innerCurrentTab.hasOwnProperty("url")
-                && innerCurrentTab.url.includes(URL_REPORT_PROBLEM_APPLE)) {
-
-                currentTab = innerCurrentTab;
-
-                // Get state
+            if (currentTab
+                && currentTab.hasOwnProperty("url")
+                && currentTab.url.includes(URL_REPORT_PROBLEM_APPLE)) {
                 serviceWorkerInterface.sendMessage({ type: "GET_STATE" });
             } else {
                 console.error("Only works on Apple website");
+                // todo: show UI error
             }
         });
 

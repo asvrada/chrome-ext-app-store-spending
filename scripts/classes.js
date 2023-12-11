@@ -56,45 +56,15 @@ class Currency {
  */
 class RequestHistory {
     constructor() {
-        /** @type {Map<string, string>} */
-        this.mapTabIdDsid = new Map();
-        /** @type {Map<string, Array<{name: string, value: string}>} */
-        this.mapTabIdHeaders = new Map();
+        /** @type {Map<String, {dsid: string, headers: null | Array<{name: string, value: string}}>} */
+        this.mapRequestIdToInfo = new Map();
 
-        /** @type {number} */
-        this.lastTabId = null;
         /** @type {string} */
         this.lastRequestId = null;
     }
 
-    /**
-     * Combine tabId and requestId into a key
-     * @param {number} tabId 
-     * @param {string} requestId 
-     * @returns {string} A key for the Map
-     */
-    toKey(tabId, requestId) {
-        return tabId.toString() + "-" + requestId.toString();
-    }
-
-    /**
-     * Separate tabId and requestId from a key 
-     * @param {string} key 
-     * @returns {{tabId: string, requestId: string}}
-     */
-    fromKey(key) {
-        let arr = key.split("-");
-        return {
-            tabId: arr[0],
-            requestId: arr[1]
-        };
-    }
-
     recordBeforeRequest(details) {
-        // Grab key
-        const tabId = details.tabId;
         const requestId = details.requestId;
-        const key = this.toKey(tabId, requestId);
 
         // Grab dsid
         const raw = details.requestBody.raw[0].bytes;
@@ -104,23 +74,29 @@ class RequestHistory {
 
         const dsid = obj["dsid"];
 
-        // Set Map
-        this.mapTabIdDsid.set(key, dsid);
+        // Init entry in Map
+        this.mapRequestIdToInfo.set(requestId, {dsid, headers: null});
     }
 
     recordSendHeaders(details) {
-        // Grab key
-        const tabId = details.tabId;
         const requestId = details.requestId;
-        const key = this.toKey(tabId, requestId);
 
+        // check if requestId valid
+        const entry = this.mapRequestIdToInfo.get(requestId);
+        if (entry === undefined) {
+            throw "Unexpected: requestId missing";
+        }
+
+        // Grab headers
         const headers = details.requestHeaders;
 
         // Set Map
-        this.mapTabIdHeaders.set(key, headers);
+        this.mapRequestIdToInfo.set(requestId, {
+            dsid: entry.dsid,
+            headers
+        });
 
-        // Set the last tabId and requestId here
-        this.lastTabId = tabId;
+        // Set the last requestId here
         this.lastRequestId = requestId;
     }
 }

@@ -8,7 +8,7 @@ const URLS = ["*://reportaproblem.apple.com/api/purchase/search/*"];
 // GLOBAL VARIABLES
 /** @type {PopupMessageInterface} */
 let popupMessenger = null;
-/** @type {State | null} Service Worker state */
+/** @type {State} Service Worker state */
 let state = null;
 
 // Stores every variable the service worker needs
@@ -17,16 +17,14 @@ class State {
         /** @type {RequestHistory} Store HTTP request related information */
         this.requestHistory = new RequestHistory();
 
-        /** 
-         * Store state for each tabId
-         * A key-value is only created after user clicks start
-         * totalAmount may store difference currency,
-         *   this is because App Store account can change region,
-         *   thus the currency it uses.
-         *   Each currency represents the amount paid in that currency ALONE.
-         * @type {Map<number, {fetchJob: null | FetchJob, results: {purchases: null | Array<Purchase>, totalAmount: null | Array<Currency>}}}
-         */
-        this.mapTabIdState = new Map();
+        /** @type {FetchJob | null} */
+        this.fetchJob = null;
+
+        /** @type {{purchases: null | Array<Purchase>, totalAmount: null | Array<Currency>}} */
+        this.results = {
+            purchases: null,
+            totalAmount: null
+        };
     }
 
     static getInstance() {
@@ -34,109 +32,64 @@ class State {
     }
 
     /**
-     * If don't exist, create, otherwise do nothing
-     * @param {number} tabId 
-     */
-    _createStateIfMissing(tabId) {
-        if (!this.mapTabIdState.has(tabId)) {
-            this.mapTabIdState.set(tabId, {
-                fetchJob: null,
-                results: {
-                    purchases: null,
-                    totalAmount: null
-                }
-            });
-        }
-    }
-
-    /**
-     * Get, default to null
-     * @param {number} tabId 
-     * @returns {null | {fetchJob: null | FetchJob, results: {purchases: null | Array<Purchase>, totalAmount: null | Array<Currency>}}}
-     */
-    getState(tabId) {
-        if (!this.mapTabIdState.has(tabId)) {
-            return null;
-        }
-
-        return this.mapTabIdState.get(tabId);
-    }
-
-    /**
-     * Get FetchJob for given tabId.
-     * @param {number} tabId 
+     * Get FetchJob.
      * @returns {null | FetchJob}
      */
-    getFetchJob(tabId) {
-        this._createStateIfMissing(tabId);
-
-        return this.mapTabIdState.get(tabId).fetchJob;
+    getFetchJob() {
+        return this.fetchJob;
     }
 
     /**
      * Throw if already created
-     * @param {number} tabId 
      * @returns {FetchJob} the created FetchJob
      */
-    createFetchJob(tabId, dsid, arr_headers) {
-        this._createStateIfMissing(tabId);
-
-        const stateTabId = this.mapTabIdState.get(tabId);
-        if (stateTabId.fetchJob !== null) {
-            throw "createFetchJobByTabId failed: Already created FetchJob for this tabId";
+    createFetchJob(dsid, arr_headers) {
+        if (this.getFetchJob() !== null) {
+            throw "createFetchJob failed: Already created FetchJob";
         }
 
-        stateTabId.fetchJob = new FetchJob(dsid, arr_headers);
+        this.fetchJob = new FetchJob(dsid, arr_headers);
 
-        return stateTabId.fetchJob;
+        return this.getFetchJob();
     }
 
     /**
      * 
-     * @param {number} tabId 
      * @param {Array<Purchase>} purchase 
      */
-    setPurchases(tabId, purchase) {
-        const results = this.getState(tabId).results;
-
-        results.purchases = purchase;
+    setPurchases(purchase) {
+        this.results.purchases = purchase;
     }
 
     /**
      * 
-     * @param {number} tabId 
      * @param {Array<Currency>} totalAmount 
      */
-    setTotalAmount(tabId, totalAmount) {
-        const results = this.getState(tabId).results;
-
-        results.totalAmount = totalAmount;
+    setTotalAmount(totalAmount) {
+        this.results.totalAmount = totalAmount;
     }
 
     /**
-     * Send current state for given tab to popup
-     * @param {number} tabId 
+     * Send current state to popup
      */
-    sendLoadState(tabId) {
-        const state = this.getState(tabId);
-
+    sendLoadState() {
         // Determine FetchJobState
-        let status = FetchJobState.NOT_READY;
-        if (state && state.fetchJob) {
+        let state = FetchJobState.NOT_READY;
+        if (this.fetchJob) {
             // Take fetchJob's status if we have one
-            status = state.fetchJob.status;
-        } else if (this.requestHistory.mapTabIdHeaders.has(tabId)) {
+            state = this.fetchJob.status;
+        } else if (this.requestHistory.lastRequestId) {
             // Otherwise determine from HTTP request history
-            status = FetchJobState.NOT_STARTED;
+            state = FetchJobState.NOT_STARTED;
         }
 
         popupMessenger.sendMessage({
             type: "LOAD_STATE",
             payload: {
-                state: status,
+                state,
                 results: {
                     purchases: null, // ignore for now
-                    totalAmount: state ? state.results.totalAmount : null
+                    totalAmount: this.results.totalAmount
                 }
             }
         });
@@ -172,18 +125,18 @@ class PopupMessageInterface {
 
     /**
      * Handle a message from popup
-     * @param {{type: string, tabId: number, payload: any}} msg Incoming message from popup
+     * @param {{type: string, payload: any}} msg Incoming message from popup
      */
     handleOnMessage(msg) {
         console.log("Got message from popup", msg);
-        const { type, tabId, payload } = msg;
+        const { type, payload } = msg;
 
         if (type === "START") {
-            startFetchJob(tabId);
+            startFetchJob();
         } else if (type === "ABORT") {
-            abortFetchJob(tabId);
+            abortFetchJob();
         } else if (type === "GET_STATE") {
-            State.getInstance().sendLoadState(tabId);
+            State.getInstance().sendLoadState();
         } else {
             // Unrecognized message
             console.error("Unrecognized message from popup", msg);
@@ -230,43 +183,36 @@ function registerListeners() {
     registerHTTPListeners();
 }
 
-/**
- * 
- * @param {number} tabId 
- */
-async function startFetchJob(tabId) {
+async function startFetchJob() {
     const requestHistory = State.getInstance().requestHistory;
-    if (requestHistory.lastTabId === null
-        || requestHistory.lastRequestId === null) {
+    const lastRequestId = requestHistory.lastRequestId;
+    if (lastRequestId === null) {
         throw "Refresh page and try again";
     }
 
-    const key = requestHistory.toKey(requestHistory.lastTabId, requestHistory.lastRequestId);
-    const dsid = requestHistory.mapTabIdDsid.get(key);
-    const arr_headers = requestHistory.mapTabIdHeaders.get(key);
+    const { dsid, headers } = requestHistory.mapRequestIdToInfo.get(lastRequestId);
 
-    // Create a FetchJob for this tabId
-    const existingFetchJob = State.getInstance().getFetchJob(tabId);
+    // Create a FetchJob
+    const existingFetchJob = State.getInstance().getFetchJob();
     if (existingFetchJob !== null
         // Can only start a Fetch Job if it's NOT_STARTED
         && existingFetchJob.status !== FetchJobState.NOT_STARTED) {
-        throw "startFetchJob failed: Already started a Fetch Job for current tab";
+        throw "startFetchJob failed: Already started a Fetch Job";
     }
 
-    // todo: re-think
     // Stop HTTP listeners
     unregisterHTTPListeners();
 
     // Create new FetchJob
-    const fetchJob = State.getInstance().createFetchJob(tabId, dsid, arr_headers);
+    const fetchJob = State.getInstance().createFetchJob(dsid, headers);
 
     await fetchJob.start();
-    postprocessing(tabId, fetchJob);
+    postprocessing(fetchJob);
 
-    State.getInstance().sendLoadState(tabId);
+    State.getInstance().sendLoadState();
 }
 
-function postprocessing(tabId, fetchJob) {
+function postprocessing(fetchJob) {
     const filter1 = new FreeItemFilter();
     filter1.filter(fetchJob.history);
 
@@ -278,22 +224,16 @@ function postprocessing(tabId, fetchJob) {
     const totalAmount = aggregator1.aggregate(purchase);
     console.log("Total cost of all purchases", totalAmount);
 
-    State.getInstance().setPurchases(tabId, purchase);
-    State.getInstance().setTotalAmount(tabId, totalAmount);
+    State.getInstance().setPurchases(purchase);
+    State.getInstance().setTotalAmount(totalAmount);
 }
 
-/**
- * 
- * @param {number} tabId 
- */
-function abortFetchJob(tabId) {
-    const fetchJob = State.getInstance().getFetchJob(tabId);
+function abortFetchJob() {
+    const fetchJob = State.getInstance().getFetchJob();
     if (fetchJob === null) {
         return;
     }
     fetchJob.abort();
-
-    State.getInstance().sendLoadState(tabId);
 }
 
 // Reset all global variables

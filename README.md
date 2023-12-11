@@ -14,7 +14,6 @@ Either end can send messages with the following format
 ```javascript
 {
     type: string, // pre-defined enum
-    tabId: number, // optional, only required for popup sends to service worker
     payload: any
 }
 ```
