@@ -3,31 +3,63 @@
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
 
     <link rel="stylesheet" href="popup.css">
     <link href="3rdparty/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
-    <div class="container">
-        <h1>How much did I spend on App Store?</h1>
-
-        <h2>Click link and login</h2>
-        <a href="https://reportaproblem.apple.com/?s=6" target="_blank">Official App Store Purchase History</a>
-
-        <h2>Analyze</h2>
-
-        <div id="errorWrongUrl">
-            Please navigate to
-            <a href="https://reportaproblem.apple.com/?s=6" target="_blank">Official App Store Purchase History</a>
+    <div class="container text-center">
+        <div class="row justify-content-center align-items-center m-2">
+            <div class="col-3">
+                <img id="logoAppStore" src="./3rdparty/App_Store.png">
+            </div>
+            <div class="col" id="title">我在 App Store 花了多少?</div>
         </div>
 
-        <button id="btnStartAnalyze">Analyze current page</button>
-        <button id="btnStopAnalyze">ABORT</button>
+        <div class="row justify-content-center align-items-center m-2 p-2" id="step1-box">
+            <div class="col-1">
+                <div class="step-indicator">
+                    1
+                </div>
+                <!-- <svg class="step-indicator" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+                    <path
+                        d="M38.4744 20C38.4744 30.7819 29.9613 39.5 19.4872 39.5C9.01301 39.5 0.5 30.7819 0.5 20C0.5 9.21812 9.01301 0.5 19.4872 0.5C29.9613 0.5 38.4744 9.21812 38.4744 20Z" />
+                </svg> -->
+            </div>
+            <div class="col">
+                <div>本插件仅能在苹果相关网站运行</div>
+                <div>请<a href="https://reportaproblem.apple.com/?s=6" target="_blank">点击此处打开网站</a>，并<strong>登录</strong>
+                </div>
+            </div>
+        </div>
 
-        <h2>Results</h2>
-        <h3>Your total spending is:</h3>
-        <div id="results"></div>
+        <div class="row justify-content-center align-items-center m-2 p-2" id="step2-box">
+            <div class="col-1">
+                <div class="step-indicator">
+                    2
+                </div>
+            </div>
+
+            <div class="col">
+                <div>开始后请勿离开本页面</div>
+
+                <div>
+                    <button id="btnStartAnalyze">开始查询</button>
+                    <button id="btnStopAnalyze">终止</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row justify-content-center align-items-center m-2 p-2">
+            <div class="col">
+                你的消费为：
+                <div id="results">
+                    （查询会持续几分钟，完成后结果自动显示在此）
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="./popup.js"></script>

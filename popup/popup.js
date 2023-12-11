@@ -1,12 +1,10 @@
 const ID_BTN_START_ANALYZE = "btnStartAnalyze";
 const ID_BTN_ABORT_ANALYZE = "btnStopAnalyze";
-const ID_DIV_WRONG_URL = "errorWrongUrl";
 const ID_DIV_RESULTS = "results";
 const URL_REPORT_PROBLEM_APPLE = "reportaproblem.apple.com";
 
 const btnStartAnalyze = document.getElementById(ID_BTN_START_ANALYZE);
 const btnAbortAnalyze = document.getElementById(ID_BTN_ABORT_ANALYZE);
-const divErrorWrongUrl = document.getElementById(ID_DIV_WRONG_URL);
 const divResults = document.getElementById(ID_DIV_RESULTS);
 
 /** @type {{id: number, url: string}} */
@@ -86,7 +84,6 @@ function onBtnAbortAnalyze() {
 }
 
 function initUI() {
-    divErrorWrongUrl.style.display = "none";
 }
 
 /**
@@ -129,8 +126,7 @@ function registerListeners() {
                 // Get state
                 serviceWorkerInterface.sendMessage({ type: "GET_STATE" });
             } else {
-                // Show error on UI
-                divErrorWrongUrl.style.display = "block";
+                console.error("Only works on Apple website");
             }
         });
 

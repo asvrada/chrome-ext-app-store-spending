@@ -1,4 +1,41 @@
 html {
-    width: 500px;
-    height: 400px;
+    width: 460px;
+    /* height: 400px; */
+
+    font-family: Arial;
+}
+
+#logoAppStore {
+    width: 80px;
+    height: 80px;
+}
+
+#title {
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+#step1-box {
+    border-radius: 8px;
+    border: 1px solid var(--bs-body-color);
+}
+
+#step2-box {
+    border-radius: 8px;
+    border: 1px solid var(--bs-body-color);
+}
+
+.step-indicator {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    stroke-width: 1px;
+    stroke: var(--bs-body-color);
+
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
 }
