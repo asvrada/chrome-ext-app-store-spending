@@ -1,7 +1,14 @@
 const FetchJobState = {
+    // FetchJob ready to start
     NOT_STARTED: 0,
+    // FetchJob running
     RUNNING: 1,
-    ABORTED: 2
+    // FetchJob finished without error
+    FINISHED: 2,
+    // FetchJob started but aborted
+    ABORTED: 3,
+    // No dsid info recorded, need to refresh
+    NOT_READY: 4
 };
 
 /**
@@ -54,7 +61,9 @@ class RequestHistory {
         /** @type {Map<string, Array<{name: string, value: string}>} */
         this.mapTabIdHeaders = new Map();
 
+        /** @type {number} */
         this.lastTabId = null;
+        /** @type {string} */
         this.lastRequestId = null;
     }
 
@@ -131,7 +140,6 @@ class Item {
         /** @type {string} */
         this.type = type;
         // amountPaid
-        // todo: change to track currency
         /** @type {Currency} */
         this.amountPaid = Currency.from(amount);
     }
@@ -160,15 +168,11 @@ class Purchase {
  */
 class PurchaseDay {
     constructor() {
-        // purchaseDate
         /** @type {Date} */
         this.date = null;
-        // estimatedTotalAmount
-        // todo: change to track currency
         /** @type {Currency} */
         this.totalAmount = null;
         // List of Item
-        // plis
         /** @type {Array<Item>} */
         this.items = [];
     }
@@ -288,6 +292,10 @@ class FetchJob {
         } catch (e) {
             this.status = FetchJobState.ABORTED;
             console.error(e);
+        }
+
+        if (this.status !== FetchJobState.ABORTED) {
+            this.status = FetchJobState.FINISHED;
         }
     }
 

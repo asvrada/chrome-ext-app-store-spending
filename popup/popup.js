@@ -11,6 +11,7 @@ const divResults = document.getElementById(ID_DIV_RESULTS);
 
 /** @type {{id: number, url: string}} */
 let currentTab = null;
+/** @type {ServiceWorkerInterface} */
 let serviceWorkerInterface = null;
 
 class ServiceWorkerInterface {
@@ -28,20 +29,31 @@ class ServiceWorkerInterface {
         console.log("Got message from service worker", msg);
         const { type, payload } = msg;
 
-        if (type === "UPDATE") {
-            /** @type {Array<{currency: string, amount: number}>} */
-            const totalAmount = payload.totalAmount;
-            if (totalAmount === null) {
-                // No final results yet
-                return;
+        if (type === "LOAD_STATE") {
+            const state = payload.state;
+            if (state === 0) {
+                // NOT_STARTED
+            } else if (state === 1) {
+                // RUNNING
+            } else if (state === 2) {
+                // FINISHED
+                updateTotalAmount(payload.results.totalAmount);
+            } else if (state === 3) {
+                // ABORTED
+                updateTotalAmount(payload.results.totalAmount);
+            } else if (state === 4) {
+                // NOT_READY
+                // todo: prompt to refresh page
+            } else {
+                console.error("Unrecognized state", payload);
+                throw "5???";
             }
-
-            // Update UI to display the results
-            let html = "";
-            totalAmount.forEach((each) => {
-                html += `<p>${each.currency}${each.amount}</p>`;
-            });
-            divResults.innerHTML = html;
+        } else if (type === "UPDATE") {
+            /** @type {number} 0-100 */
+            const progress = payload.p;
+        } else {
+            // Unrecognized message
+            console.error("Unrecognized message from service worker", msg);
         }
     }
 
@@ -62,15 +74,32 @@ class ServiceWorkerInterface {
 }
 
 function onBtnStartAnalyze() {
-    chrome.runtime.sendMessage({ message: "START", tabId: currentTab.id });
+    serviceWorkerInterface.sendMessage({
+        type: "START",
+    });
 }
 
 function onBtnAbortAnalyze() {
-    chrome.runtime.sendMessage({ message: "ABORT", tabId: currentTab.id });
+    serviceWorkerInterface.sendMessage({
+        type: "ABORT",
+    });
 }
 
 function initUI() {
     divErrorWrongUrl.style.display = "none";
+}
+
+/**
+ * 
+ * @param {Array<{currency: string, amount: number} totalAmount 
+ */
+function updateTotalAmount(totalAmount) {
+    // Update UI to display the results
+    let html = "";
+    totalAmount.forEach((each) => {
+        html += `<p>${each.currency}${each.amount}</p>`;
+    });
+    divResults.innerHTML = html;
 }
 
 function registerListeners() {
@@ -97,8 +126,8 @@ function registerListeners() {
 
                 currentTab = innerCurrentTab;
 
-                // Get update
-                serviceWorkerInterface.sendMessage({ type: "UPDATE" });
+                // Get state
+                serviceWorkerInterface.sendMessage({ type: "GET_STATE" });
             } else {
                 // Show error on UI
                 divErrorWrongUrl.style.display = "block";
