@@ -2,30 +2,36 @@
 <html lang="en">
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <link rel="stylesheet" href="popup.css">
+    <link href="3rdparty/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
-    <h1>How much did I spend on App Store?</h1>
+    <div class="container">
+        <h1>How much did I spend on App Store?</h1>
 
-    <h2>Click link and login</h2>
-    <a href="https://reportaproblem.apple.com/?s=6" target="_blank">Official App Store Purchase History</a>
-
-    <h2>Analyze</h2>
-
-    <div id="errorWrongUrl">
-        Please navigate to
+        <h2>Click link and login</h2>
         <a href="https://reportaproblem.apple.com/?s=6" target="_blank">Official App Store Purchase History</a>
+
+        <h2>Analyze</h2>
+
+        <div id="errorWrongUrl">
+            Please navigate to
+            <a href="https://reportaproblem.apple.com/?s=6" target="_blank">Official App Store Purchase History</a>
+        </div>
+
+        <button id="btnStartAnalyze">Analyze current page</button>
+        <button id="btnStopAnalyze">ABORT</button>
+
+        <h2>Results</h2>
+        <h3>Your total spending is:</h3>
+        <div id="results"></div>
     </div>
 
-    <button id="btnStartAnalyze">Analyze current page</button>
-    <button id="btnStopAnalyze">ABORT</button>
-
-    <h2>Results</h2>
-    <h3>Your total spending is:</h3>
-    <div id="results"></div>
-
     <script src="./popup.js"></script>
+    <script src="./3rdparty/jquery-3.7.1.min.js"></script>
 </body>
 
 </html>
