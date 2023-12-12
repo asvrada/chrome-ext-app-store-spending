@@ -1,3 +1,4 @@
+import { calPercentage } from "./helper.js";
 import {PopupMessenger, State} from "./service-worker.js";
 
 const FetchJobState = {
@@ -270,10 +271,11 @@ class FetchJob {
                 this.history.visit(result.data);
 
                 // Send progress update
+                const length = result.data["purchases"].length;
                 PopupMessenger.getInstance().sendMessage({
                     type: "UPDATE",
                     payload: {
-                        p: 50
+                        p: calPercentage(result.data["purchases"][length - 1]["purchaseDate"])
                     }
                 });
             }
@@ -284,6 +286,12 @@ class FetchJob {
 
         if (this.status !== FetchJobState.ABORTED) {
             this.status = FetchJobState.FINISHED;
+            PopupMessenger.getInstance().sendMessage({
+                type: "UPDATE",
+                payload: {
+                    p: 100
+                }
+            });
         }
     }
 
