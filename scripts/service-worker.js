@@ -135,6 +135,8 @@ class PopupMessageInterface {
             startFetchJob();
         } else if (type === "ABORT") {
             abortFetchJob();
+        } else if (type === "RESET") {
+            reset();
         } else if (type === "GET_STATE") {
             State.getInstance().sendLoadState();
         } else {
@@ -239,7 +241,6 @@ function abortFetchJob() {
 // Reset all global variables
 function reset() {
     state = new State();
-
     popupMessenger = new PopupMessageInterface();
 }
 
