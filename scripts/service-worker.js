@@ -6,7 +6,7 @@ import { FreeItemFilter, SingleEntryConverter, TotalAmountAggregator } from "./p
 const URLS = ["*://reportaproblem.apple.com/api/purchase/search/*"];
 
 // GLOBAL VARIABLES
-/** @type {PopupMessageInterface} */
+/** @type {PopupMessenger} */
 let popupMessenger = null;
 /** @type {State} Service Worker state */
 let state = null;
@@ -96,12 +96,16 @@ class State {
     }
 }
 
-class PopupMessageInterface {
+class PopupMessenger {
     constructor() {
         this.port = null;
 
         // service worker accepts incoming long connect from popup.js
         chrome.runtime.onConnect.addListener((port) => this.handleOnConnect(port));
+    }
+
+    static getInstance() {
+        return popupMessenger;
     }
 
     handleOnDisconnect() {
@@ -249,9 +253,9 @@ function reset() {
 (function main() {
     console.log("service-worker.js main called",);
 
-    popupMessenger = new PopupMessageInterface();
+    popupMessenger = new PopupMessenger();
     reset();
 })();
 
 // So other components can call State.getInstance
-export { State };
+export { State, PopupMessenger };

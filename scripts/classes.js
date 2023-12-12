@@ -268,6 +268,8 @@ class FetchJob {
 
                 result = await this.doFetch(result.nextBatchId);
                 this.history.visit(result.data);
+
+                // Send progress update
             }
         } catch (e) {
             this.status = FetchJobState.ABORTED;
