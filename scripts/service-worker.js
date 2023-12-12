@@ -181,10 +181,6 @@ function unregisterHTTPListeners() {
     chrome.webRequest.onSendHeaders.removeListener();
 }
 
-function registerListeners() {
-    registerHTTPListeners();
-}
-
 async function startFetchJob() {
     const requestHistory = State.getInstance().requestHistory;
     const lastRequestId = requestHistory.lastRequestId;
@@ -241,14 +237,16 @@ function abortFetchJob() {
 // Reset all global variables
 function reset() {
     state = new State();
-    popupMessenger = new PopupMessageInterface();
+
+    unregisterHTTPListeners();
+    registerHTTPListeners();
 }
 
 (function main() {
     console.log("service-worker.js main called",);
 
+    popupMessenger = new PopupMessageInterface();
     reset();
-    registerListeners();
 })();
 
 // So other components can call State.getInstance
