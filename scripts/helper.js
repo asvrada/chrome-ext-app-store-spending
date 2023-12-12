@@ -5,7 +5,7 @@ function roundToTwo(num) {
 const DATE_NOW = new Date();
 // Just a date that is old but not that old
 const DATE_IPHONE5_RELEASE = new Date(2012, 9, 21);
-const DIFF = DATE_NOW - DATE_APP_STORE_OPEN;
+const DIFF = DATE_NOW - DATE_IPHONE5_RELEASE;
 
 /**
  * 
