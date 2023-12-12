@@ -1,3 +1,5 @@
+import {State} from "./service-worker.js";
+
 const FetchJobState = {
     // FetchJob ready to start
     NOT_STARTED: 0,
@@ -98,6 +100,8 @@ class RequestHistory {
 
         // Set the last requestId here
         this.lastRequestId = requestId;
+
+        State.getInstance().sendLoadState();
     }
 }
 

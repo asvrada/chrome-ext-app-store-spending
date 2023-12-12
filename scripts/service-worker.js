@@ -152,7 +152,6 @@ class PopupMessageInterface {
     sendMessage(message) {
         console.log("Sending message to popup", message);
         if (!this.port) {
-            console.error("Send failed, port not open");
             return;
         }
 
@@ -160,25 +159,30 @@ class PopupMessageInterface {
     }
 }
 
-function registerHTTPListeners() {
+function onBeforeRequestListener(details) {
     const requestHistory = State.getInstance().requestHistory;
-    chrome.webRequest.onBeforeRequest.addListener((details) => {
-        requestHistory.recordBeforeRequest(details);
-    }, {
+    requestHistory.recordBeforeRequest(details);
+}
+
+function onSendHeadersListener(details) {
+    const requestHistory = State.getInstance().requestHistory;
+    requestHistory.recordSendHeaders(details);
+}
+
+function registerHTTPListeners() {
+    chrome.webRequest.onBeforeRequest.addListener(onBeforeRequestListener, {
         urls: URLS
     }, ["requestBody", "extraHeaders"]);
 
-    chrome.webRequest.onSendHeaders.addListener((details) => {
-        requestHistory.recordSendHeaders(details);
-    }, {
+    chrome.webRequest.onSendHeaders.addListener(onSendHeadersListener, {
         urls: URLS
     }, ["requestHeaders"]);
 }
 
 // Unregister listeners when we start fetching
 function unregisterHTTPListeners() {
-    chrome.webRequest.onBeforeRequest.removeListener();
-    chrome.webRequest.onSendHeaders.removeListener();
+    chrome.webRequest.onBeforeRequest.removeListener(onBeforeRequestListener);
+    chrome.webRequest.onSendHeaders.removeListener(onSendHeadersListener);
 }
 
 async function startFetchJob() {
