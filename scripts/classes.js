@@ -1,4 +1,4 @@
-import {State} from "./service-worker.js";
+import {PopupMessenger, State} from "./service-worker.js";
 
 const FetchJobState = {
     // FetchJob ready to start
@@ -270,6 +270,12 @@ class FetchJob {
                 this.history.visit(result.data);
 
                 // Send progress update
+                PopupMessenger.getInstance().sendMessage({
+                    type: "UPDATE",
+                    payload: {
+                        p: 50
+                    }
+                });
             }
         } catch (e) {
             this.status = FetchJobState.ABORTED;
