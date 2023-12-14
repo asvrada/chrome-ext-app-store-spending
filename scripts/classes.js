@@ -1,3 +1,6 @@
+import { calPercentage } from "./helper.js";
+import {PopupMessenger, State} from "./service-worker.js";
+
 const FetchJobState = {
     // FetchJob ready to start
     NOT_STARTED: 0,
@@ -98,6 +101,8 @@ class RequestHistory {
 
         // Set the last requestId here
         this.lastRequestId = requestId;
+
+        State.getInstance().sendLoadState();
     }
 }
 
@@ -264,6 +269,15 @@ class FetchJob {
 
                 result = await this.doFetch(result.nextBatchId);
                 this.history.visit(result.data);
+
+                // Send progress update
+                const length = result.data["purchases"].length;
+                PopupMessenger.getInstance().sendMessage({
+                    type: "UPDATE",
+                    payload: {
+                        p: calPercentage(result.data["purchases"][length - 1]["purchaseDate"])
+                    }
+                });
             }
         } catch (e) {
             this.status = FetchJobState.ABORTED;
@@ -272,6 +286,12 @@ class FetchJob {
 
         if (this.status !== FetchJobState.ABORTED) {
             this.status = FetchJobState.FINISHED;
+            PopupMessenger.getInstance().sendMessage({
+                type: "UPDATE",
+                payload: {
+                    p: 100
+                }
+            });
         }
     }
 

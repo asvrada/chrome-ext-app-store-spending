@@ -49,7 +49,14 @@ payload: null
 type = "ABORT"
 payload: null
 
-// 3. Get latest state
+// 3. Reset state
+type = "RESET"
+payload: null
+
+// 4. Get latest state
 type = "GET_STATE"
 payload: null
 ```
+
+## Ref
+https://www.rapidtables.com/web/html/html-codes.html

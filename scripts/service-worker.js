@@ -6,7 +6,7 @@ import { FreeItemFilter, SingleEntryConverter, TotalAmountAggregator } from "./p
 const URLS = ["*://reportaproblem.apple.com/api/purchase/search/*"];
 
 // GLOBAL VARIABLES
-/** @type {PopupMessageInterface} */
+/** @type {PopupMessenger} */
 let popupMessenger = null;
 /** @type {State} Service Worker state */
 let state = null;
@@ -96,12 +96,16 @@ class State {
     }
 }
 
-class PopupMessageInterface {
+class PopupMessenger {
     constructor() {
         this.port = null;
 
         // service worker accepts incoming long connect from popup.js
         chrome.runtime.onConnect.addListener((port) => this.handleOnConnect(port));
+    }
+
+    static getInstance() {
+        return popupMessenger;
     }
 
     handleOnDisconnect() {
@@ -135,6 +139,8 @@ class PopupMessageInterface {
             startFetchJob();
         } else if (type === "ABORT") {
             abortFetchJob();
+        } else if (type === "RESET") {
+            reset();
         } else if (type === "GET_STATE") {
             State.getInstance().sendLoadState();
         } else {
@@ -150,7 +156,6 @@ class PopupMessageInterface {
     sendMessage(message) {
         console.log("Sending message to popup", message);
         if (!this.port) {
-            console.error("Send failed, port not open");
             return;
         }
 
@@ -158,29 +163,30 @@ class PopupMessageInterface {
     }
 }
 
-function registerHTTPListeners() {
+function onBeforeRequestListener(details) {
     const requestHistory = State.getInstance().requestHistory;
-    chrome.webRequest.onBeforeRequest.addListener((details) => {
-        requestHistory.recordBeforeRequest(details);
-    }, {
+    requestHistory.recordBeforeRequest(details);
+}
+
+function onSendHeadersListener(details) {
+    const requestHistory = State.getInstance().requestHistory;
+    requestHistory.recordSendHeaders(details);
+}
+
+function registerHTTPListeners() {
+    chrome.webRequest.onBeforeRequest.addListener(onBeforeRequestListener, {
         urls: URLS
     }, ["requestBody", "extraHeaders"]);
 
-    chrome.webRequest.onSendHeaders.addListener((details) => {
-        requestHistory.recordSendHeaders(details);
-    }, {
+    chrome.webRequest.onSendHeaders.addListener(onSendHeadersListener, {
         urls: URLS
     }, ["requestHeaders"]);
 }
 
 // Unregister listeners when we start fetching
 function unregisterHTTPListeners() {
-    chrome.webRequest.onBeforeRequest.removeListener();
-    chrome.webRequest.onSendHeaders.removeListener();
-}
-
-function registerListeners() {
-    registerHTTPListeners();
+    chrome.webRequest.onBeforeRequest.removeListener(onBeforeRequestListener);
+    chrome.webRequest.onSendHeaders.removeListener(onSendHeadersListener);
 }
 
 async function startFetchJob() {
@@ -240,15 +246,16 @@ function abortFetchJob() {
 function reset() {
     state = new State();
 
-    popupMessenger = new PopupMessageInterface();
+    unregisterHTTPListeners();
+    registerHTTPListeners();
 }
 
 (function main() {
     console.log("service-worker.js main called",);
 
+    popupMessenger = new PopupMessenger();
     reset();
-    registerListeners();
 })();
 
 // So other components can call State.getInstance
-export { State };
+export { State, PopupMessenger };
