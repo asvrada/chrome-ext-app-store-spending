@@ -1,0 +1,21 @@
+{
+  "setting_language": "Language",
+  "please_refresh": "Please refresh Apple website",
+  "title-comp": "How much did I spend on <br/> App Store",
+  "heading_step1": "This works on specific Apple website only",
+  "please": "Please ",
+  "link_apple": "click here to open",
+  "and": ", and ",
+  "login": "login",
+  "btn_start": "Start",
+  "btn_abort": "Abort",
+  "btn_reset": "Delete result",
+  "heading_running": "Don't leave this page",
+  "heading_not_started": "Don't leave this page once started",
+  "status_aborted": "Aborted",
+  "status_finished": "Finished",
+  "heading_reset": "To restart, click button below",
+  "result_title": "Your App Store total spending",
+  "result_incomplete": "Aborted, incomplete result",
+  "result_pending": "Processing, results will appear here"
+}

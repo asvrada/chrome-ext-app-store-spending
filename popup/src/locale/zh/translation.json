@@ -1,0 +1,21 @@
+{
+  "setting_language": "语言",
+  "please_refresh": "请刷新苹果网站页面",
+  "title-comp": "我在 App Store 花了多少",
+  "heading_step1": "本插件仅能在苹果相关网站运行",
+  "please": "请",
+  "link_apple": "点击此处打开网站",
+  "and": "，并",
+  "login": "登入",
+  "btn_start": "开始查询",
+  "btn_abort": "中止",
+  "btn_reset": "清除数据",
+  "heading_running": "运行中！请勿离开本页面",
+  "heading_not_started": "开始后请勿离开本页面",
+  "status_aborted": "已中止",
+  "status_finished": "已完成",
+  "heading_reset": "若要重新查询，请点击下方按钮",
+  "result_title": "您在 App Store 的总消费额为",
+  "result_incomplete": "提前中止，数据不完整",
+  "result_pending": "运行中，完成后结果自动显示在此"
+}
