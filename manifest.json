@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "How much did I spend on App Store",
-    "version": "1.0",
-    "description": "Securely summarize your Apple's App Store purchase history.",
+    "name": "Your App Store spending overview",
+    "version": "1.0.2",
+    "description": "Quick and secure summary of your Apple's App Store purchase history.",
     "icons": {
         "16": "images/icon-16.png",
         "32": "images/icon-32.png",
