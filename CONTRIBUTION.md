@@ -2,11 +2,15 @@
 
 For developers who want to contribute to this project.
 
+Source files are under `scripts/` and `popup/` folders.
+
 ## How to build / Manual install
 
 To test the project in Chrome, we use "Load Unpacked" feature.
 
 ## Design
+
+There are two components in this extension: 1) Service Worker, 2) Popup.
 
 ### Message between Service Worker and popup
 
