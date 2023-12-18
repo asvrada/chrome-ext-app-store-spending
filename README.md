@@ -1,6 +1,6 @@
-# How much have I spent on App Store?
+# App Store spending overview
 
-This is a Google Chrome extension that calculates how much you have spent on App Store.
+This is a Google Chrome extension that summarizes how much you have spent on App Store in total.
 
 [View it on Chrome web store](https://chromewebstore.google.com/detail/how-much-did-i-spent-on-a/bgdecjabbhjkhenadhghpkkabmjdhhag?hl=en) and try it out.
 
