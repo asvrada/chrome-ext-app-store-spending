@@ -76,7 +76,7 @@ function App() {
                     </div>
 
                     <div className="text-2xl font-bold">
-                        <Trans i18nKey="title-comp"></Trans>&#63;
+                        <Trans i18nKey="title-comp"></Trans>
                     </div>
                 </div>
 
