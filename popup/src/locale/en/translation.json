@@ -19,5 +19,7 @@
   "result_incomplete": "Aborted, incomplete result",
   "result_pending": "Processing, results will appear here",
   "result_aborted_empty": "Zero! No non-free purchases so far.",
-  "result_finished_empty": "Zero! You didn't spend any money, good!"
+  "result_finished_empty": "Zero! You didn't spend any money, good!",
+  "qa_accurate_q": "Is it accurate",
+  "qa_accurate_a": "Due to various limitation, this tool will include purchases even you've cancelled or refunded. So the displayed amount might be greater than your actual spending."
 }
