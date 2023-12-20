@@ -1,5 +1,5 @@
 import { calPercentage } from "./helper.js";
-import {PopupMessenger, State} from "./service-worker.js";
+import { PopupMessenger, State } from "./service-worker.js";
 
 const FetchJobState = {
     // FetchJob ready to start
@@ -66,6 +66,26 @@ class RequestHistory {
         this.lastRequestId = null;
     }
 
+    /**
+     * A Object that might have either dsid or dsids
+     * @param {{dsid: string, dsids: Array<sstring>}} obj 
+     * @returns {string} The dsid
+     */
+    _extractDsid(obj) {
+        if (obj.hasOwnProperty("dsid")) {
+            return obj["dsid"];
+        } else if (obj.hasOwnProperty("dsids")) {
+            const dsids = obj["dsids"];
+            if (dsids.length !== 1) {
+                throw "Can't handle this! Fix";
+            }
+            return obj["dsids"][0];
+        } else {
+            // ? Unlikely
+            throw "Unexpected: dsid missing";
+        }
+    }
+
     recordBeforeRequest(details) {
         const requestId = details.requestId;
 
@@ -75,10 +95,10 @@ class RequestHistory {
         const str = decoder.decode(raw);
         const obj = JSON.parse(str);
 
-        const dsid = obj["dsid"];
+        const dsid = this._extractDsid(obj);
 
         // Init entry in Map
-        this.mapRequestIdToInfo.set(requestId, {dsid, headers: null});
+        this.mapRequestIdToInfo.set(requestId, { dsid, headers: null });
     }
 
     recordSendHeaders(details) {
