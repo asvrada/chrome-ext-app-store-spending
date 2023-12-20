@@ -95,7 +95,6 @@ class RequestHistory {
         const str = decoder.decode(raw);
         const obj = JSON.parse(str);
 
-        // TODO: handle dsids
         const dsid = this._extractDsid(obj);
 
         // Init entry in Map
