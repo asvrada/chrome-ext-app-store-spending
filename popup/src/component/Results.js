@@ -3,6 +3,34 @@ import {useTranslation} from "react-i18next";
 
 import {FetchJobState} from "../store/stateSlice";
 
+function ListAmount({amounts, status}) {
+    const {t} = useTranslation();
+
+    if (amounts.length === 0) {
+        if (status === FetchJobState.ABORTED) {
+            return (<span className="text-lg">
+                {t("result_aborted_empty")}
+            </span>);
+        }
+        if (status === FetchJobState.FINISHED) {
+            return (<span className="text-lg">
+                {t("result_finished_empty")}
+            </span>);
+        }
+    }
+
+    return (<>
+        {amounts.map((each, idx) => {
+            return (<>
+                {idx !== 0 ? <div>+</div> : null}
+                <div>
+                    {each.currency}{each.amount}
+                </div>
+            </>);
+        })}
+    </>);
+}
+
 export default function Results() {
     const {state, results} = useSelector((state) => state.state);
     const {t} = useTranslation();
@@ -14,17 +42,8 @@ export default function Results() {
     }
 
     const componentTotalAmount = results.totalAmount
-        ? results.totalAmount.map((each, idx) => {
-            return (
-                <>
-                    {idx !== 0 ? <div>+</div> : null}
-                    <div>
-                        {each.currency}{each.amount}
-                    </div>
-                </>
-            );
-        })
-        : null;
+        ? <ListAmount amounts={results.totalAmount} status={state}/>
+        : <span>Error</span>;
 
     return (
         <div>

@@ -23,9 +23,19 @@ export default function MockPanel() {
                 }))}>Aborted
                 </button>
                 <button onClick={() => dispatch(handleLoadState({
+                    state: FetchJobState.ABORTED,
+                    results: {totalAmount: []}
+                }))}>Aborted empty
+                </button>
+                <button onClick={() => dispatch(handleLoadState({
                     state: FetchJobState.FINISHED,
                     results: {totalAmount: [{currency: "$$$", amount: 9999.99}, {currency: "¥¥¥", amount: 19999.99}]}
                 }))}>Finished
+                </button>
+                <button onClick={() => dispatch(handleLoadState({
+                    state: FetchJobState.FINISHED,
+                    results: {totalAmount: []}
+                }))}>Finished empty
                 </button>
             </div>
         </div>
