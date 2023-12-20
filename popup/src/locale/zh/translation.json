@@ -19,5 +19,7 @@
   "result_incomplete": "提前中止，数据不完整",
   "result_pending": "运行中，完成后结果自动显示在此",
   "result_aborted_empty": "暂未遇到任何消费",
-  "result_finished_empty": "您没有任何消费"
+  "result_finished_empty": "您没有任何消费",
+  "qa_accurate_q": "数据准确吗",
+  "qa_accurate_a": "由于技术原因，本工具无法去除已退款或取消的账单。所以显示结果可能大于您实际消费。"
 }
