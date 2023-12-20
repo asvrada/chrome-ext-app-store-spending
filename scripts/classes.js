@@ -1,5 +1,5 @@
 import { calPercentage } from "./helper.js";
-import {PopupMessenger, State} from "./service-worker.js";
+import { PopupMessenger, State } from "./service-worker.js";
 
 const FetchJobState = {
     // FetchJob ready to start
@@ -75,10 +75,11 @@ class RequestHistory {
         const str = decoder.decode(raw);
         const obj = JSON.parse(str);
 
+        // TODO: handle dsids
         const dsid = obj["dsid"];
 
         // Init entry in Map
-        this.mapRequestIdToInfo.set(requestId, {dsid, headers: null});
+        this.mapRequestIdToInfo.set(requestId, { dsid, headers: null });
     }
 
     recordSendHeaders(details) {
