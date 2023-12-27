@@ -9,7 +9,7 @@ const resources = {
     en: {
         translation: transEn,
     },
-    zh: {
+    "zh-CN": {
         translation: transZh
     }
 };

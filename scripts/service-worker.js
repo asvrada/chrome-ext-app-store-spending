@@ -218,6 +218,13 @@ async function startFetchJob() {
     State.getInstance().sendLoadState();
 }
 
+/**
+ * Post processing data
+ * 1. remove free purchases
+ * 2. flatten purchases
+ * 3. calculate sum
+ * @param {FetchJob} fetchJob 
+ */
 function postprocessing(fetchJob) {
     const filter1 = new FreeItemFilter();
     filter1.filter(fetchJob.history);

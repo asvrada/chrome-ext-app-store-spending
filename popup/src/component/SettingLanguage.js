@@ -13,7 +13,7 @@ export default function SettingLanguage() {
             {t("setting_language")}:&#160;
             <select value={i18n.language} onChange={handleLanguageChange}>
                 <option value="en">English</option>
-                <option value="zh">中文-简体</option>
+                <option value="zh-CN">中文-简体</option>
             </select>
         </div>
     );
