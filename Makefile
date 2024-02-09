@@ -3,12 +3,13 @@
 help:
 	@ echo "Available commands:"
 	@ echo "  make help - show this message"
-	@ echo "  make popup - build popup react project"
+	@ echo "  make build - build whole extension"
+	@ echo "  make popup - build popup"
 	@ echo "  make popup-clean - remove popup-build directory"
 
 popup:
 	@ echo "Building popup react project..."
-	cd popup && npm run build
+	cd popup && npm run build_prod
 
 popup-clean:
 	rm -rf ./popup-build/
@@ -23,9 +24,5 @@ build: popup
 	cp -r ./images ./build/
 	# Copy ./scripts
 	cp -r ./scripts ./build/
-	# Copy /popup
-	cp -r ./popup-build ./build/
-	# Delete uncessary files
-	rm ./build/popup-build/asset-manifest.json
-	rm ./build/popup-build/static/js/*.map
-	rm ./build/popup-build/static/css/*.map
+	# Move /popup
+	mv ./popup-build ./build/popup-build
