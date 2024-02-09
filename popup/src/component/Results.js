@@ -2,6 +2,7 @@ import {useSelector} from "react-redux";
 import {useTranslation} from "react-i18next";
 
 import {FetchJobState} from "../store/stateSlice";
+import {generateCSV} from "../helper";
 
 // Question and Answer
 function QAPanel() {
@@ -60,6 +61,31 @@ function ListAmount({amounts, status}) {
     </>);
 }
 
+function DownloadResult() {
+    const state = useSelector((state) => state.state);
+    const purchases = state.results.purchases || null;
+
+    if (!purchases) {
+        return null;
+    }
+
+    function onClick() {
+        const CSV = generateCSV(purchases);
+
+        const a = window.document.createElement('a');
+        a.href = window.URL.createObjectURL(CSV);
+        a.download = 'purchases.csv';
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    return <div onClick={onClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Download you purchases
+    </div>;
+}
+
 export default function Results() {
     const {state, results} = useSelector((state) => state.state);
     const {t} = useTranslation();
@@ -83,6 +109,8 @@ export default function Results() {
             {state === FetchJobState.RUNNING
                 ? <div className="">&#40;{t("result_pending")}&#41;</div>
                 : <div>{componentTotalAmount}</div>}
+
+            {state === FetchJobState.FINISHED ? <DownloadResult/> : null}
         </div>
     );
 }

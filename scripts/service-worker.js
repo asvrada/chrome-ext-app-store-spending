@@ -88,8 +88,8 @@ class State {
             payload: {
                 state,
                 results: {
-                    purchases: null, // ignore for now
-                    totalAmount: this.results.totalAmount
+                    purchases: this.results.purchases,
+                    totalAmount: this.results.totalAmount,
                 }
             }
         });
