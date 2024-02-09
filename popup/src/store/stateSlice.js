@@ -19,14 +19,16 @@ export const stateSlice = createSlice({
         isTargetWebsite: false,
         state: FetchJobState.NOT_READY,
         results: {
-            totalAmount: null
+            purchases: null,
+            totalAmount: null,
         },
         p: 0
     },
     reducers: {
         handleLoadState: (state, action) => {
             state.state = action.payload.state;
-            state.results = action.payload.results;
+            state.results.purchases = action.payload.results.purchases;
+            state.results.totalAmount = action.payload.results.totalAmount;
         },
         handleUpdate: (state, action) => {
             state.p = action.payload.p;

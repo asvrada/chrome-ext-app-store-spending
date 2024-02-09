@@ -50,7 +50,7 @@ class FreeItemFilter {
 class SingleEntryConverter {
     constructor() {
         /** @type {Array<Purchase>} */
-        this.purchases = [];
+        this.purchases = null;
     }
 
     /**
@@ -58,8 +58,10 @@ class SingleEntryConverter {
      * @returns {Array<Purchase>} Array of purchases
      */
     convert(purchaseHistory) {
+        this.purchases = [];
+
         for (const purchaseDay of purchaseHistory.days) {
-            this.handleDay(purchaseDay);
+            this._handleDay(purchaseDay);
         }
 
         return this.purchases;
@@ -69,7 +71,7 @@ class SingleEntryConverter {
      * Split purchases from a single day into individual purchases
      * @param {PurchaseDay} purchaseDay 
      */
-    handleDay(purchaseDay) {
+    _handleDay(purchaseDay) {
         const totalAmountAfterTax = purchaseDay.totalAmount.amount;
         const totalAmountPreTax = purchaseDay.items.reduce((acc, item) => acc + item.amountPaid.amount, 0);
         const tax = totalAmountAfterTax - totalAmountPreTax;
@@ -78,6 +80,7 @@ class SingleEntryConverter {
             const purchase = new Purchase();
             purchase.date = purchaseDay.date;
             purchase.name = item.name;
+            purchase.detail = item.detail;
             purchase.type = item.type;
 
             purchase.amountPaid = new Currency();

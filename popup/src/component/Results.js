@@ -2,6 +2,7 @@ import {useSelector} from "react-redux";
 import {useTranslation} from "react-i18next";
 
 import {FetchJobState} from "../store/stateSlice";
+import {generateCSV} from "../helper";
 
 // Question and Answer
 function QAPanel() {
@@ -60,6 +61,35 @@ function ListAmount({amounts, status}) {
     </>);
 }
 
+function DownloadResult() {
+    const state = useSelector((state) => state.state);
+    const purchases = state.results.purchases || null;
+
+    if (!purchases) {
+        return null;
+    }
+
+    function onClick() {
+        const CSV = generateCSV(purchases);
+
+        const a = window.document.createElement('a');
+        a.href = window.URL.createObjectURL(CSV);
+        a.download = 'purchases.csv';
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    return (
+        <button type="button"
+                onClick={onClick}
+                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 mt-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+            Download your data as CSV
+        </button>
+    );
+}
+
 export default function Results() {
     const {state, results} = useSelector((state) => state.state);
     const {t} = useTranslation();
@@ -83,6 +113,8 @@ export default function Results() {
             {state === FetchJobState.RUNNING
                 ? <div className="">&#40;{t("result_pending")}&#41;</div>
                 : <div>{componentTotalAmount}</div>}
+
+            {state === FetchJobState.FINISHED ? <DownloadResult/> : null}
         </div>
     );
 }

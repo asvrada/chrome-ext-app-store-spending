@@ -133,10 +133,13 @@ class Item {
      * @param {string} type 
      * @param {string} amount 
      */
-    constructor(name, type, amount) {
+    constructor(name, detail, type, amount) {
         // nameForDisplay
         /** @type {string} */
         this.name = name;
+        // detailForDisplay
+        /** @type {string} */
+        this.detail = detail;
         // mediaType
         /** @type {string} */
         this.type = type;
@@ -156,6 +159,8 @@ class Purchase {
 
         /** @type {string} */
         this.name = null;
+        /** @type {string} */
+        this.detail = null;
         /** @type {string} */
         this.type = null;
 
@@ -214,10 +219,11 @@ class PurchaseHistory {
         const items = purchase["plis"];
         items.forEach((item) => {
             const name = item["localizedContent"]["nameForDisplay"];
+            const detail = item["localizedContent"]["detailForDisplay"];
             const type = item["localizedContent"]["mediaType"];
             const amount = item["amountPaid"];
 
-            const purchaseItem = new Item(name, type, amount);
+            const purchaseItem = new Item(name, detail, type, amount);
             purchaseDay.addItem(purchaseItem);
         });
     }
