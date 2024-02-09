@@ -22,6 +22,11 @@ function addEscape(s) {
     return s;
 }
 
+/**
+ * Generate CSV object given purchases
+ * @param purchases {[{date: string, name: string, detail: string, type: string, amountPaid: {currency: string, amount: number}}]}
+ * @returns {module:buffer.Blob}
+ */
 function generateCSV(purchases) {
     const header = "Date,Name,Detail,Type,Amount";
     const rows = purchases.map((each) => {

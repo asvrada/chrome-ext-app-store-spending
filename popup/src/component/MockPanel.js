@@ -2,6 +2,19 @@ import {useDispatch} from "react-redux";
 import {handleLoadState, FetchJobState, changeState, handleUpdate} from "../store/stateSlice";
 import {useEffect} from "react";
 
+const MOCK_PURCHASES = [
+    {
+        date: (new Date()).toISOString(),
+        name: "name 1",
+        detail: "detail 1",
+        type: "type 1",
+        amountPaid: {
+            currency: "$",
+            amount: 123
+        }
+    }
+]
+
 export default function MockPanel() {
     const dispatch = useDispatch();
 
@@ -29,12 +42,12 @@ export default function MockPanel() {
                 </button>
                 <button onClick={() => dispatch(handleLoadState({
                     state: FetchJobState.FINISHED,
-                    results: {totalAmount: [{currency: "$$$", amount: 9999.99}, {currency: "¥¥¥", amount: 19999.99}]}
+                    results: {purchases: MOCK_PURCHASES, totalAmount: [{currency: "$$$", amount: 9999.99}, {currency: "¥¥¥", amount: 19999.99}]}
                 }))}>Finished
                 </button>
                 <button onClick={() => dispatch(handleLoadState({
                     state: FetchJobState.FINISHED,
-                    results: {totalAmount: []}
+                    results: {purchases: [], totalAmount: []}
                 }))}>Finished empty
                 </button>
             </div>

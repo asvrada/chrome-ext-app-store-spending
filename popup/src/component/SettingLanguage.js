@@ -9,9 +9,9 @@ export default function SettingLanguage() {
     };
 
     return (
-        <div className="w-auto fixed top-0 right-0 font-light opacity-50 text-sm">
+        <div className="w-auto fixed top-0 right-0 font-light opacity-50 text-xs">
             {t("setting_language")}:&#160;
-            <select value={i18n.language} onChange={handleLanguageChange}>
+            <select value={i18n.language} onChange={handleLanguageChange} className="text-xs p-1">
                 <option value="en">English</option>
                 <option value="zh">中文-简体</option>
             </select>

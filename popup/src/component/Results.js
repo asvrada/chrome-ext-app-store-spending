@@ -81,9 +81,13 @@ function DownloadResult() {
         document.body.removeChild(a);
     }
 
-    return <div onClick={onClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Download you purchases
-    </div>;
+    return (
+        <button type="button"
+                onClick={onClick}
+                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 mt-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+            Download your data as CSV
+        </button>
+    );
 }
 
 export default function Results() {
