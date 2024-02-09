@@ -47,7 +47,7 @@ function App() {
 
         if (
           currentTab &&
-          currentTab.hasOwnProperty("url") &&
+          currentTab.hasOwn("url") &&
           currentTab.url.includes("reportaproblem.apple.com")
         ) {
           dispatch(setIsTargetWebsite(true));
